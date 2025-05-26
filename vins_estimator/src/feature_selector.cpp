@@ -5,6 +5,8 @@ FeatureSelector::FeatureSelector(ros::NodeHandle nh, Estimator& estimator,
 : nh_(nh), estimator_(estimator)
 {
 
+  pub_selection_time = nh_.advertise<geometry_msgs::Vector3Stamped>("selection_time", 1000); // added by kian
+
   // create future state horizon generator / manager
   hgen_ = std::unique_ptr<HorizonGenerator>(new HorizonGenerator(nh_));
 
@@ -174,6 +176,8 @@ FeatureSelector::select(image_t& image,
 
   // Only select features if VINS-Mono is initialized
   if (initialized) {
+    static TicToc t_fsel{};
+    t_fsel.tic();
     // selectedIds = selectInformativeFeatures(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
     
     // selectedIds = select_traceofinv_simple(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
@@ -188,6 +192,13 @@ FeatureSelector::select(image_t& image,
     
     // selectedIds = select_actualrandom(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
     
+    // send out selection time
+    double selection_time_ms = t_fsel.toc();
+    geometry_msgs::Vector3Stamped msg;
+    msg.header = header;
+    msg.vector.x = selection_time_ms;
+    pub_selection_time.publish(msg);
+
   } else if (!initialized && firstImage_) {
     // use the whole image to initialize!
     subset.swap(image_new);

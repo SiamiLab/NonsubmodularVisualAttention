@@ -10,6 +10,7 @@
 
 #include <ros/ros.h>
 #include <std_msgs/Header.h>
+#include <geometry_msgs/Vector3Stamped.h>
 
 #include <Eigen/Dense>
 #include <Eigen/SVD>
@@ -25,6 +26,7 @@
 
 #include "feature_manager.h"
 #include "estimator.h"
+#include "utility/tic_toc.h"
 
 class FeatureSelector
 {
@@ -313,6 +315,8 @@ private:
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells);
+  
+  ros::Publisher pub_selection_time;
 
 
 
