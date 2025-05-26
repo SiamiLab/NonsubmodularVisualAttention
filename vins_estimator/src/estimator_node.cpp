@@ -384,6 +384,18 @@ void process()
     }
 }
 
+void user_command_callback(const geometry_msgs::Vector3Stamped &msg)
+{
+    // std::cout << "Kian " << msg.vector.x << ", " << msg.vector.y << std::endl;
+    f_selector->hgen_->user_command_callback(msg);
+
+}
+void velocity_encoder_callback(const geometry_msgs::Vector3Stamped &msg)
+{
+    // std::cout << "Kian " << msg.vector.x << ", " << msg.vector.y << ", " << msg.vector.z << std::endl;
+    f_selector->hgen_->velocity_encoder_callback(msg);
+}
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "vins_estimator");
@@ -404,6 +416,10 @@ int main(int argc, char **argv)
     ros::Subscriber sub_image = n.subscribe("/feature_tracker/feature", 2000, feature_callback);
     ros::Subscriber sub_restart = n.subscribe("/feature_tracker/restart", 2000, restart_callback);
     ros::Subscriber sub_relo_points = n.subscribe("/pose_graph/match_points", 2000, relocalization_callback);
+
+    // Kian added for prediction
+    ros::Subscriber sub_user_command = n.subscribe("/user_command", 2000, user_command_callback);
+    ros::Subscriber sub_velocity_encoder = n.subscribe("/velocity_encoder", 2000, velocity_encoder_callback);
 
     std::thread measurement_process{process};
     ros::spin();

@@ -17,10 +17,11 @@ ros::Publisher pub_extrinsic;
 
 ros::Publisher pub_selinfo;
 
-CameraPoseVisualization cameraposevisual(0, 1, 0, 1);
+CameraPoseVisualization cameraposevisual(0, 0.66, 0, 1);
 CameraPoseVisualization keyframebasevisual(0.0, 0.0, 1.0, 1.0);
 static double sum_of_path = 0;
 static Vector3d last_path(0.0, 0.0, 0.0);
+
 
 void registerPub(ros::NodeHandle &n)
 {
@@ -39,10 +40,11 @@ void registerPub(ros::NodeHandle &n)
     pub_relo_relative_pose=  n.advertise<nav_msgs::Odometry>("relo_relative_pose", 1000);
     pub_selinfo = n.advertise<sensor_msgs::PointCloud>("selection_info", 1000);
 
-    cameraposevisual.setScale(1);
-    cameraposevisual.setLineWidth(0.05);
+    cameraposevisual.setScale(0.30);
+    cameraposevisual.setLineWidth(0.03);
     keyframebasevisual.setScale(0.1);
     keyframebasevisual.setLineWidth(0.01);
+
 }
 
 void pubLatestOdometry(const Eigen::Vector3d &P, const Eigen::Quaterniond &Q, const Eigen::Vector3d &V, const std_msgs::Header &header)

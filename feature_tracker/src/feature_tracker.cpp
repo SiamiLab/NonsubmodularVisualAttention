@@ -191,6 +191,7 @@ bool FeatureTracker::withinBorder(const cv::Point2f& pt)
 cv::Mat FeatureTracker::enforceMinDist(std::vector<cv::Point2f>& features0)
 {
   // create a new mask
+  // std::cout << "KIAN" << std::endl;
   cv::Mat mask(m_camera_->imageHeight(), m_camera_->imageWidth(), CV_8UC1, cv::Scalar(255));
 
   // 

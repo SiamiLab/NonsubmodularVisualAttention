@@ -42,11 +42,90 @@ AttentionViewerROS::AttentionViewerROS(ros::NodeHandle nh)
 // Private Methods
 // ----------------------------------------------------------------------------
 
+// kian: this is original function, I changed it below
+// void AttentionViewerROS::callback(const sensor_msgs::ImageConstPtr& _img,
+//                                   const sensor_msgs::PointCloudConstPtr& _features,
+//                                   const sensor_msgs::PointCloudConstPtr& _selinfo)
+// {
+//   // bail if no one wants to listen to us
+//   if (img_pub_.getNumSubscribers() == 0) return;
+
+//   cv::Mat img;
+
+//   try {
+//     img = cv_bridge::toCvShare(_img, "bgr8")->image;
+//   } catch (cv_bridge::Exception& e) {
+//     ROS_ERROR("Could not convert from '%s' to 'bgr8'.", _img->encoding.c_str());
+//     return;
+//   }
+
+//   // for convenience
+//   const auto& oldIds = _selinfo->channels[0].values;
+//   const auto& newIds = _selinfo->channels[1].values;
+
+//   for (size_t i=0; i<_features->points.size(); ++i) {
+//     // auto nip = cv::Point2f{_features->points[i].x, _features->points[i].y};
+//     int id = static_cast<int>(_features->channels[0].values[i]);
+//     auto pix = cv::Point2f(_features->channels[1].values[i], _features->channels[2].values[i]);
+//     auto vel = cv::Point2f(_features->channels[3].values[i], _features->channels[4].values[i]);
+//     auto prob = _features->channels[5].values[i];
+
+//     bool isOld = std::find(oldIds.begin(), oldIds.end(), id) != oldIds.end();
+//     bool isNew = std::find(newIds.begin(), newIds.end(), id) != newIds.end();
+
+//     if (isNew || isOld) {
+
+//       // update how long each feature has been alive
+//       if (isNew) {
+//         // initialize feature lifetime
+//         featureLifetime_[id] = 0;
+//       } else {
+//         featureLifetime_[id]++;
+//       }
+
+//       // color blend: new-blue, old-red
+//       constexpr int horizon = 10;
+//       double alpha = std::min(1.0, static_cast<double>(featureLifetime_[id]) / horizon);
+//       auto color = cv::Scalar(255 * (1 - alpha), 0, 255 * alpha);
+
+//       // draw feature
+//       cv::circle(img, pix, 2, color, 2);
+
+//       // draw prob
+//       auto scoreColor = cv::Scalar(0, 255*prob, 255*(1 - prob));
+//       cv::circle(img, pix, 2, scoreColor, 1);
+
+//       // // draw velocity
+//       // constexpr double dt = 0.10;
+//       // cv::Point2f nip0 = nip - dt*vel;
+//       // Eigen::Vector3d b0(nip0.x, nip0.y, 1.0);
+//       // Eigen::Vector2d a0;
+//       // tracker_->camera()->spaceToPlane(b0, a0);
+//       // cv::line(img, pix, cv::Point2f(a0.x(), a0.y()), cv::Scalar(255 , 0, 0), 1 , 8, 0);
+      
+//       // print id next to feature
+//       char strID[10];
+//       sprintf(strID, "%d", id);
+//       cv::putText(img, strID, pix, cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
+
+//     } else { // this feature was never chosen
+//       auto color = cv::Scalar(0, 255, 0);
+//       cv::circle(img, pix, 2, color, 1);
+//     }
+//   }
+
+//   // pack up and publish
+//   cv_bridge::CvImage out;
+//   out.header = _img->header;
+//   out.encoding = sensor_msgs::image_encodings::BGR8;
+//   out.image = img;
+//   img_pub_.publish(out.toImageMsg());
+// }
+
 void AttentionViewerROS::callback(const sensor_msgs::ImageConstPtr& _img,
                                   const sensor_msgs::PointCloudConstPtr& _features,
                                   const sensor_msgs::PointCloudConstPtr& _selinfo)
 {
-  // bail if no one wants to listen to us
   if (img_pub_.getNumSubscribers() == 0) return;
 
   cv::Mat img;
@@ -58,62 +137,26 @@ void AttentionViewerROS::callback(const sensor_msgs::ImageConstPtr& _img,
     return;
   }
 
-  // for convenience
   const auto& oldIds = _selinfo->channels[0].values;
   const auto& newIds = _selinfo->channels[1].values;
 
-  for (size_t i=0; i<_features->points.size(); ++i) {
-    // auto nip = cv::Point2f{_features->points[i].x, _features->points[i].y};
+  for (size_t i = 0; i < _features->points.size(); ++i) {
     int id = static_cast<int>(_features->channels[0].values[i]);
     auto pix = cv::Point2f(_features->channels[1].values[i], _features->channels[2].values[i]);
-    auto vel = cv::Point2f(_features->channels[3].values[i], _features->channels[4].values[i]);
-    auto prob = _features->channels[5].values[i];
 
     bool isOld = std::find(oldIds.begin(), oldIds.end(), id) != oldIds.end();
     bool isNew = std::find(newIds.begin(), newIds.end(), id) != newIds.end();
 
-    if (isNew || isOld) {
-
-      // update how long each feature has been alive
-      if (isNew) {
-        // initialize feature lifetime
-        featureLifetime_[id] = 0;
-      } else {
-        featureLifetime_[id]++;
-      }
-
-      // color blend: new-blue, old-red
-      constexpr int horizon = 10;
-      double alpha = std::min(1.0, static_cast<double>(featureLifetime_[id]) / horizon);
-      auto color = cv::Scalar(255 * (1 - alpha), 0, 255 * alpha);
-
-      // draw feature
-      cv::circle(img, pix, 2, color, 2);
-
-      // draw prob
-      auto scoreColor = cv::Scalar(0, 255*prob, 255*(1 - prob));
-      cv::circle(img, pix, 2, scoreColor, 1);
-
-      // // draw velocity
-      // constexpr double dt = 0.10;
-      // cv::Point2f nip0 = nip - dt*vel;
-      // Eigen::Vector3d b0(nip0.x, nip0.y, 1.0);
-      // Eigen::Vector2d a0;
-      // tracker_->camera()->spaceToPlane(b0, a0);
-      // cv::line(img, pix, cv::Point2f(a0.x(), a0.y()), cv::Scalar(255 , 0, 0), 1 , 8, 0);
-      
-      // print id next to feature
-      char strID[10];
-      sprintf(strID, "%d", id);
-      cv::putText(img, strID, pix, cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
-
-    } else { // this feature was never chosen
-      auto color = cv::Scalar(0, 255, 0);
-      cv::circle(img, pix, 2, color, 1);
+    if (isOld || isNew) {
+      // Selected feature (new or old) → green
+      cv::circle(img, pix, 6, cv::Scalar(0, 255, 0), -1);
+    } else {
+      // Not selected → red
+      cv::circle(img, pix, 6, cv::Scalar(0, 0, 255), -1);
     }
   }
 
-  // pack up and publish
+  // Publish annotated image
   cv_bridge::CvImage out;
   out.header = _img->header;
   out.encoding = sensor_msgs::image_encodings::BGR8;

@@ -67,6 +67,8 @@ public:
           const Eigen::Vector3d& V, const Eigen::Vector3d& a,
           const Eigen::Vector3d& w, const Eigen::Vector3d& Ba);
 
+  std::unique_ptr<HorizonGenerator> hgen_;
+  
 private:
   // ROS stuff
   ros::NodeHandle nh_;
@@ -106,7 +108,6 @@ private:
   // state generator over the future horizon
   typedef enum { IMU, GT } horizon_generation_t;
   horizon_generation_t horizonGeneration_;
-  std::unique_ptr<HorizonGenerator> hgen_;
 
   // state
   state_t state_k_;     ///< state of last frame, k (from backend)
@@ -277,4 +278,47 @@ private:
       const omega_horizon_t& Omega, const omega_horizon_t& OmegaS,
       const std::map<int, omega_horizon_t>& Delta_ells,
       const std::vector<int>& blacklist, const image_t& image);
+
+
+  
+  std::vector<int> select_traceofinv_simple(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
+  std::vector<int> select_traceofinv_lazy(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
+  std::vector<int> select_traceofinv_randomized(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
+
+  std::vector<int> select_logdet_lazy(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
+  
+  std::vector<int> select_actualrandom(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
+
+  std::vector<int> select_lambdamin_lazy(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
+  
+  std::vector<int> select_lambdamin_randomized(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
+
+
+
+
+  std::map<double, int, std::greater<double>> sortedlambdaminUB(
+  const omega_horizon_t& Omega, const omega_horizon_t& OmegaS,
+  const std::map<int, omega_horizon_t>& Delta_ells,
+  const std::vector<int>& blacklist, const image_t& image);
 };

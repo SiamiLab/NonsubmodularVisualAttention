@@ -9,6 +9,7 @@
 #include <std_msgs/Header.h>
 #include <nav_msgs/Path.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Vector3Stamped.h>
 
 #include <Eigen/Dense>
 
@@ -58,6 +59,20 @@ public:
    * @param[in]  x_kkH   The state horizon to visualize
    */
   void visualize(const std_msgs::Header& header, const state_horizon_t& x_kkH);
+
+  // added by kian for prediction
+  void user_command_callback(const geometry_msgs::Vector3Stamped &msg); // will bebcalled from estimator_node.cpp
+  void velocity_encoder_callback(const geometry_msgs::Vector3Stamped &msg); // will bebcalled from estimator_node.cpp
+  double vel_x, vel_y, steering_angle; // m/s, m/s, radian
+  state_horizon_t bicycle_model(const state_t& state_0, const state_t& state_1, double deltaFrame);
+  typedef struct {
+    double timestamp;
+    Eigen::Vector3d v;
+    double throttle, steering_angle;
+  } bicycle_data_t;
+  std::vector<bicycle_data_t> bicycle_data_;
+  void loadBicycleData(std::string data_csv);
+
 
 private:
   // ROS stuff

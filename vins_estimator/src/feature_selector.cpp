@@ -82,7 +82,7 @@ FeatureSelector::select(image_t& image,
   //
 
   // frame time of previous image
-  static double frameTime_k = header.stamp.toSec();
+  static double frameTime_k = header.stamp.toSec(); //- initialize only once
 
   // time difference between last frame and current frame
   double deltaF = header.stamp.toSec() - frameTime_k;
@@ -120,6 +120,12 @@ FeatureSelector::select(image_t& image,
   }
   // ROS_WARN_STREAM("Feature subset initialized with " << subset.size() << " out"
                   // " of " << trackedFeatures_.size() << " known features");
+
+
+  //- image has features that are tracked from previous frames
+  //- subset has features that are tracked from previous frames AND selected in previous frames (and send to backend)
+  //- image_new contains newly seen features in curren frame
+
 
   //
   // Future State Generation
@@ -161,14 +167,27 @@ FeatureSelector::select(image_t& image,
   // be selected (kappa).
   int kappa = std::max(0, maxFeatures_ - static_cast<int>(subset.size()));
 
+
   // so we can keep track of the new features we chose
   std::vector<int> selectedIds;
   selectedIds.reserve(kappa);
 
   // Only select features if VINS-Mono is initialized
   if (initialized) {
-    selectedIds = selectInformativeFeatures(subset, image_new, kappa, Omega_kkH,
-                                                Delta_ells, Delta_used_ells);
+    // selectedIds = selectInformativeFeatures(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+    
+    // selectedIds = select_traceofinv_simple(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+    // selectedIds = select_traceofinv_lazy(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+    // selectedIds = select_traceofinv_randomized(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+    
+    selectedIds = select_logdet_lazy(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+    
+    // selectedIds = select_lambdamin_lazy(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+    // selectedIds = select_lambdamin_randomized(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+    
+    
+    // selectedIds = select_actualrandom(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+    
   } else if (!initialized && firstImage_) {
     // use the whole image to initialize!
     subset.swap(image_new);
@@ -228,7 +247,8 @@ state_horizon_t FeatureSelector::generateFutureHorizon(
 
   // generate the horizon based on the requested scheme
   if (horizonGeneration_ == IMU) {
-    return hgen_->imu(state_k_, state_k1_, ak1_, wk1_, nrImuMeasurements, deltaImu);
+    // return hgen_->imu(state_k_, state_k1_, ak1_, wk1_, nrImuMeasurements, deltaImu);
+    return hgen_->bicycle_model(state_k_, state_k1_, deltaFrame); // Kian: I use this parameter to do bicycle model prediction (instead of imu)
   } else { //if (horizonGeneration_ == GT) {
     return hgen_->groundTruth(state_k_, state_k1_, deltaFrame);
   }
@@ -727,4 +747,10 @@ std::map<double, int, std::greater<double>> FeatureSelector::sortedlogDetUB(
   return UBs;
 }
 
+
+
+#include "feature_selection_methods.hpp"
+
 // ----------------------------------------------------------------------------
+
+

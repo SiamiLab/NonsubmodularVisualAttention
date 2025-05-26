@@ -10,6 +10,16 @@ HorizonGenerator::HorizonGenerator(ros::NodeHandle nh)
   if (nh_.getParam("gt_data_csv", data_csv)) {
     loadGroundTruth(data_csv);
   }
+
+  // load user commands and velocity for bicycle model
+  std::string user_cmd_csv;
+  if (nh_.getParam("bicycle_model_data_csv", user_cmd_csv)) {
+    loadBicycleData(user_cmd_csv);
+  }
+
+  vel_x = 0;
+  vel_y = 0;
+  steering_angle = 0;
 }
 
 // ----------------------------------------------------------------------------
@@ -68,6 +78,98 @@ state_horizon_t HorizonGenerator::imu(
   return state_kkH;
 }
 
+
+// Kian: implementation of the bicycle model prediction
+state_horizon_t HorizonGenerator::bicycle_model(const state_t& state_0, const state_t& state_1, double deltaFrame)
+{
+
+
+  // reading from file - if you want from bag comment these lines
+  // get the timestamp of the previous frame
+  double timestamp = state_0.first.coeff(xTIMESTAMP);
+
+  // if this condition is true, then it is likely the first state_0 (which may have random values)
+  if (timestamp > bicycle_data_.back().timestamp) timestamp = bicycle_data_.front().timestamp;
+
+  // naive time synchronization with the previous image frame and ground truth
+  int seeker = 0;
+  while (seeker < static_cast<int>(bicycle_data_.size()) && 
+                          bicycle_data_[seeker++].timestamp <= timestamp);
+  int idx = seeker-1;
+
+  double vel_x_ = bicycle_data_[idx].v.x();
+  double vel_y_ = bicycle_data_[idx].v.y();
+  double velocity_ = std::sqrt(vel_x_ * vel_x_ + vel_y_ * vel_y_) + 0.5;
+  double steering_angle_ = bicycle_data_[idx].steering_angle;
+
+  // if using from bag
+  // steering angle is stored in 'steering_angle' var and linear velocity in 'vel_x', and 'vel_y' variables.
+  // so change steering_angle_ to steering_angle and velocity to velocity_ and vice versa
+  // double velocity = std::sqrt(vel_x * vel_x + vel_y * vel_y) + 0.5;
+
+
+
+  state_horizon_t state_kkH;
+  constexpr double wheelbase = 0.26; // meters
+
+  // extract initial pose (x, y, yaw)
+  Eigen::Vector3d pos = state_0.first.segment<3>(xPOS);
+  Eigen::Quaterniond orientation = state_0.second;
+  double yaw = atan2(2.0 * (orientation.w() * orientation.z() + orientation.x() * orientation.y()),
+                     1.0 - 2.0 * (orientation.y() * orientation.y() + orientation.z() * orientation.z()));
+
+
+  // set initial state
+  state_kkH[0].first = state_0.first;
+  state_kkH[0].second = state_0.second;
+
+
+  for (int h = 1; h <= HORIZON; ++h)
+  {
+    // Bicycle model update
+    double dt = deltaFrame;
+    pos.x() += velocity_ * std::cos(yaw) * dt;
+    pos.y() += velocity_ * std::sin(yaw) * dt;
+    yaw += (velocity_ / wheelbase) * std::tan(steering_angle_) * dt;
+
+    // Update quaternion from yaw
+    Eigen::Quaterniond q_next(Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ()));
+
+    // Fill state horizon
+    state_kkH[h].first = state_kkH[h - 1].first;  // Copy previous state
+    state_kkH[h].first.segment<3>(xPOS) = pos;
+    state_kkH[h].second = q_next;
+  }
+
+  
+  return state_kkH;
+}
+
+void HorizonGenerator::loadBicycleData(std::string data_csv)
+{
+  // open the CSV file and create an iterator
+  std::ifstream file(data_csv);
+  CSVIterator it(file);
+
+  // throw away the headers
+  ++it;
+
+  bicycle_data_.clear();
+
+  for (; it != CSVIterator(); ++it) {
+    bicycle_data_t data;
+
+    data.timestamp = std::stod((*it)[0])*1e-9; // convert ns to s
+    data.throttle = std::stod((*it)[1]);
+    data.steering_angle = std::stod((*it)[2]);
+    data.v << std::stod((*it)[3]), std::stod((*it)[4]), std::stod((*it)[5]);
+
+    bicycle_data_.push_back(data);
+  }
+  // for(const auto& data : bicycle_data_)
+  //   std::cout << "Kian: " << data.timestamp << ", " << data.steering_angle << ", " << data.v.z() << std::endl;
+}
+
 // ----------------------------------------------------------------------------
 
 state_horizon_t HorizonGenerator::groundTruth(const state_t& state_0,
@@ -82,9 +184,11 @@ state_horizon_t HorizonGenerator::groundTruth(const state_t& state_0,
   if (timestamp > truth_.back().timestamp) timestamp = truth_.front().timestamp;
 
   // naive time synchronization with the previous image frame and ground truth
+  seek_idx_ = 0;
   while (seek_idx_ < static_cast<int>(truth_.size()) && 
                           truth_[seek_idx_++].timestamp <= timestamp);
   int idx = seek_idx_-1;
+
 
   // initialize state horizon structure with [xk]. The rest are future states.
   state_kkH[0].first = state_0.first;
@@ -207,4 +311,17 @@ HorizonGenerator::truth_t HorizonGenerator::getNextFrameTruth(int& idx,
                           truth_[idx++].timestamp <= nextTimestep);
 
   return truth_[idx];
+}
+
+void HorizonGenerator::user_command_callback(const geometry_msgs::Vector3Stamped &msg)
+{
+  // std::cout << "Kian (in)" << msg.vector.x << ", " << msg.vector.y << std::endl;
+  steering_angle = msg.vector.y;
+}
+
+void HorizonGenerator::velocity_encoder_callback(const geometry_msgs::Vector3Stamped &msg)
+{
+  // std::cout << "Kian (in)" << msg.vector.x << ", " << msg.vector.y << ", " << msg.vector.z << std::endl;
+  vel_x = msg.vector.x;
+  vel_y = msg.vector.y;
 }
