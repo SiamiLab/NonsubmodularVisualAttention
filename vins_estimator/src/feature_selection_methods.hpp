@@ -61,14 +61,14 @@ std::vector<int> FeatureSelector::select_traceofinv_simple(image_t& subset,
         // if feature_id_max == -1 there was likely a nan (probably because roundoff error
         // caused det(M) < 0). I guess there just won't be a feature this iter.
         if (feature_id_min > -1) {
-        double p = image.at(feature_id_min)[0].second.coeff(fPROB);
-        OmegaS += p*Delta_ells.at(feature_id_min);
+          double p = image.at(feature_id_min)[0].second.coeff(fPROB);
+          OmegaS += p*Delta_ells.at(feature_id_min);
 
-        // add feature that returns the most information to the subset
-        subset[feature_id_min] = image.at(feature_id_min);
+          // add feature that returns the most information to the subset
+          subset[feature_id_min] = image.at(feature_id_min);
 
-        // mark as used
-        blacklist.push_back(feature_id_min);
+          // mark as used
+          blacklist.push_back(feature_id_min);
         }
 
     }
@@ -109,82 +109,82 @@ std::vector<int> FeatureSelector::select_traceofinv_lazy(image_t& subset,
     // select the indices of the best features
     for (int i=0; i<kappa; ++i) {
 
-    // compute lower bounds in form of <LB, featureId> descending by LB
-    std::map<double, int, std::greater<double>> LBs;
-    const omega_horizon_t M = Omega + OmegaS;
+      // compute lower bounds in form of <LB, featureId> descending by LB
+      std::map<double, int, std::greater<double>> LBs;
+      const omega_horizon_t M = Omega + OmegaS;
 
-    // min eigenvalue and min eigen vector
-    Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(M);
-    double minEigenvalue = es.eigenvalues()(0);
-    Eigen::VectorXd minEigenvector = es.eigenvectors().col(0);
+      // min eigenvalue and min eigen vector
+      Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(M);
+      double minEigenvalue = es.eigenvalues()(0);
+      Eigen::VectorXd minEigenvector = es.eigenvectors().col(0);
 
 
-    for (const auto& fpair : Delta_ells) {
-        int feature_id = fpair.first;
+      for (const auto& fpair : Delta_ells) {
+          int feature_id = fpair.first;
 
-        // if a feature was already selected, do not calc LB. Not including it
-        // in the LBs prevents it from being selected again.
-        bool in_blacklist = std::find(blacklist.begin(), blacklist.end(),
-                                    feature_id) != blacklist.end();
-        if (in_blacklist) continue;
+          // if a feature was already selected, do not calc LB. Not including it
+          // in the LBs prevents it from being selected again.
+          bool in_blacklist = std::find(blacklist.begin(), blacklist.end(),
+                                      feature_id) != blacklist.end();
+          if (in_blacklist) continue;
 
-        // find probability of this feature being tracked
-        double p = image.at(feature_id)[0].second.coeff(fPROB);
+          // find probability of this feature being tracked
+          double p = image.at(feature_id)[0].second.coeff(fPROB);
 
-        // construct the argument to the logdetUB function
-        omega_horizon_t delta = p*Delta_ells.at(feature_id);
+          // construct the argument to the logdetUB function
+          omega_horizon_t delta = p*Delta_ells.at(feature_id);
 
-        int n = M.rows();
-        double lb = n/(minEigenvalue + (delta * minEigenvector).norm());
-        LBs[lb] = feature_id;
+          int n = M.rows();
+          double lb = n/(minEigenvalue + (delta * minEigenvector).norm());
+          LBs[lb] = feature_id;
 
-    }
+      }
 
-    // initialize the best cost function value and feature ID to worst case
-    double fMin = 100000000.0;
-    int lMin = -1;
+      // initialize the best cost function value and feature ID to worst case
+      double fMin = 100000000.0;
+      int lMin = -1;
 
-    // iterating through upperBounds in descending order, check each feature
-    for (const auto& fpair : LBs) {
-        int feature_id = fpair.second;
-        double lb = fpair.first;
+      // iterating through upperBounds in descending order, check each feature
+      for (const auto& fpair : LBs) {
+          int feature_id = fpair.second;
+          double lb = fpair.first;
 
-        // lazy evaluation: break if lB is greater than the current best cost
-        if (lb > fMin) break;
+          // lazy evaluation: break if lB is greater than the current best cost
+          if (lb > fMin) break;
 
-        // convenience: the information matrix corresponding to this feature
-        const auto& Delta_ell = Delta_ells.at(feature_id);
+          // convenience: the information matrix corresponding to this feature
+          const auto& Delta_ell = Delta_ells.at(feature_id);
 
-        // find probability of this feature being tracked
-        double p = image.at(feature_id)[0].second.coeff(fPROB);
+          // find probability of this feature being tracked
+          double p = image.at(feature_id)[0].second.coeff(fPROB);
 
-        // calculate logdet efficiently
-        auto information_matrix_tmp = Omega + OmegaS + p*Delta_ell;
-        double fValue = information_matrix_tmp.llt().solve(omega_horizon_t::Identity()).trace();
+          // calculate logdet efficiently
+          auto information_matrix_tmp = Omega + OmegaS + p*Delta_ell;
+          double fValue = information_matrix_tmp.llt().solve(omega_horizon_t::Identity()).trace();
 
-        // nan check
-        if (std::isnan(fValue)) ROS_ERROR_STREAM("trinv returned nan!");
+          // nan check
+          if (std::isnan(fValue)) ROS_ERROR_STREAM("trinv returned nan!");
 
-        // store this feature/reward if better than before
-        if (fValue < fMin) {
-        fMin = fValue;
-        lMin = feature_id;
-        }
-    }
+          // store this feature/reward if better than before
+          if (fValue < fMin) {
+          fMin = fValue;
+          lMin = feature_id;
+          }
+      }
 
-    // if lMin == -1 there was likely a nan (probably because roundoff error
-    // caused det(M) < 0). I guess there just won't be a feature this iter.
-    if (lMin > -1) {
-        // Accumulate combined feature information in subset
-        double p = image.at(lMin)[0].second.coeff(fPROB);
-        OmegaS += p*Delta_ells.at(lMin);
+      // if lMin == -1 there was likely a nan (probably because roundoff error
+      // caused det(M) < 0). I guess there just won't be a feature this iter.
+      if (lMin > -1) {
+          // Accumulate combined feature information in subset
+          double p = image.at(lMin)[0].second.coeff(fPROB);
+          OmegaS += p*Delta_ells.at(lMin);
 
-        // add feature that returns the most information to the subset
-        subset[lMin] = image.at(lMin);
+          // add feature that returns the most information to the subset
+          subset[lMin] = image.at(lMin);
 
-        // mark as used
-        blacklist.push_back(lMin);
-    }
+          // mark as used
+          blacklist.push_back(lMin);
+      }
     }
 
 
@@ -216,10 +216,15 @@ std::vector<int> FeatureSelector::select_traceofinv_randomized(image_t& subset,
     // combined information of subset
     omega_horizon_t OmegaS = omega_horizon_t::Zero();
 
+
     int N = Delta_ells.size();
-    float eps = (exp(-kappa)+1)/2.0;
-    eps = 0.1;
+    float eps = (exp(-kappa)+exp(-kappa/float(N)))/2.0; // choosing center of the interval!
+    // eps = 0.1;
     int r = (float(N)/kappa) * log(1.0/eps);
+
+    if(r == 0)
+      ROS_WARN_STREAM("Kian: randomized greedy with r = 0! debug: N: " << N << ", kappa: " << kappa << ", eps_low: " << exp(-kappa) << ", eps_high: " << exp(-kappa/float(N)) << ", eps_chosen: " << eps);
+
 
     // vector of all feature ids
     std::vector<int> ids;

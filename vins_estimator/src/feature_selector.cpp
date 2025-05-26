@@ -149,13 +149,21 @@ FeatureSelector::select(image_t& image,
   // Add in prior information to OmegaIMU_kkH (eq 16)
   addOmegaPrior(Omega_kkH);
 
+  // kian: seems there is a mistake in the code, fixing it:
+  // we should insert the features that are in image but not in subset to image_new
+  // so that they would be in the pool of selection otherwise that are not in the pool
+  for (image_t::const_iterator it = image.begin(); it != image.end(); ++it) {
+    if (subset.find(it->first) == subset.end()) {
+        image_new[it->first] = it->second;
+    }
+  }
+
   // Calculate the information content of each of the new features
   auto Delta_ells = calcInfoFromFeatures(image_new, state_kkH);
 
   // Calculate the information content of each of the currently used features
   std::map<int, omega_horizon_t> Delta_used_ells;
   Delta_used_ells = calcInfoFromFeatures(subset, state_kkH);
-
 
   //
   // Attention: Select a subset of features that maximizes expected information
@@ -178,20 +186,24 @@ FeatureSelector::select(image_t& image,
   if (initialized) {
     static TicToc t_fsel{};
     t_fsel.tic();
-    // selectedIds = selectInformativeFeatures(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
-    
-    // selectedIds = select_traceofinv_simple(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
-    // selectedIds = select_traceofinv_lazy(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
-    // selectedIds = select_traceofinv_randomized(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
-    
-    selectedIds = select_logdet_lazy(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
-    
-    // selectedIds = select_lambdamin_lazy(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
-    // selectedIds = select_lambdamin_randomized(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
-    
-    
-    // selectedIds = select_actualrandom(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
-    
+
+    if(kappa == 0){
+      selectedIds = std::vector<int> {};
+    }else{
+      // selectedIds = selectInformativeFeatures(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+      
+      // selectedIds = select_traceofinv_simple(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+      // selectedIds = select_traceofinv_lazy(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+      // selectedIds = select_traceofinv_randomized(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+      
+      // selectedIds = select_logdet_lazy(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+      
+      // selectedIds = select_lambdamin_lazy(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+      // selectedIds = select_lambdamin_randomized(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+      
+      
+      // selectedIds = select_actualrandom(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+    }
     // send out selection time
     double selection_time_ms = t_fsel.toc();
     geometry_msgs::Vector3Stamped msg;
