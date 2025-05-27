@@ -196,7 +196,9 @@ FeatureSelector::select(image_t& image,
       // selectedIds = select_traceofinv_lazy(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       // selectedIds = select_traceofinv_randomized(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       
+      // selectedIds = select_logdet_simple(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       // selectedIds = select_logdet_lazy(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+      selectedIds = select_logdet_randomized(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       
       // selectedIds = select_lambdamin_lazy(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       // selectedIds = select_lambdamin_randomized(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);

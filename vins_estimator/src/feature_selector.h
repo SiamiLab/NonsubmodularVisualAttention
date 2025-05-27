@@ -296,12 +296,17 @@ private:
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells);
 
+  std::vector<int> select_logdet_simple(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
+
   std::vector<int> select_logdet_lazy(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells);
   
-  std::vector<int> select_actualrandom(image_t& subset,
+  std::vector<int> select_logdet_randomized(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells);
@@ -315,6 +320,11 @@ private:
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells);
+  
+  std::vector<int> select_actualrandom(image_t& subset,
+          const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+          const std::map<int, omega_horizon_t>& Delta_ells,
+          const std::map<int, omega_horizon_t>& Delta_used_ells);
   
   ros::Publisher pub_selection_time;
 
