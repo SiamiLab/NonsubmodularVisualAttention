@@ -528,6 +528,78 @@ std::vector<int> FeatureSelector::select_logdet_randomized(image_t& subset,
 
 
 
+std::vector<int> FeatureSelector::select_lambdamin_simple(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells)
+{
+    // Combine motion information with information from features that are already
+    // being used in the VINS-Mono optimization backend
+    omega_horizon_t Omega = Omega_kkH;
+    for (const auto& Delta : Delta_used_ells) {
+      int feature_id = Delta.first;
+      double p = subset.at(feature_id)[0].second.coeff(fPROB);
+      Omega += Delta.second; // KIAN: shouldn't we put p*Delta.second??
+    }
+
+    // blacklist of already selected features (by id)
+    std::vector<int> blacklist;
+    blacklist.reserve(kappa);
+
+    // combined information of subset
+    omega_horizon_t OmegaS = omega_horizon_t::Zero();
+
+    // select the indices of the best features
+    for (int i=0; i<kappa; ++i)
+    {
+      double f_max = -10000000;
+      int feature_id_min = -1;
+      for (const auto& Delta : Delta_ells)
+      {
+        int feature_id = Delta.first;
+        // check if this feature chosen before; if yes: skip
+        bool in_blacklist = std::find(blacklist.begin(), blacklist.end(), feature_id) != blacklist.end();
+        if (in_blacklist) continue;
+
+        double p = image.at(feature_id)[0].second.coeff(fPROB);
+
+        omega_horizon_t information_matrix_tmp = Omega + OmegaS + p*Delta.second;
+
+        Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix_tmp);
+        double minEigenvalue = es.eigenvalues()(0);
+        double f_tmp = minEigenvalue;
+
+        
+
+        if(f_tmp > f_max)
+        {
+          f_max = f_tmp;
+          feature_id_min = feature_id;
+        }
+      }
+      // if feature_id_max == -1 there was likely a nan (probably because roundoff error
+      // caused det(M) < 0). I guess there just won't be a feature this iter.
+      if (feature_id_min > -1) {
+        double p = image.at(feature_id_min)[0].second.coeff(fPROB);
+        OmegaS += p*Delta_ells.at(feature_id_min);
+
+        // add feature that returns the most information to the subset
+        subset[feature_id_min] = image.at(feature_id_min);
+
+        // mark as used
+        blacklist.push_back(feature_id_min);
+      }
+
+    }
+
+
+    // omega_horizon_t information_matrix = Omega + OmegaS;
+    // Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
+    // double minEigenvalue = es.eigenvalues()(0);
+    // double fValue =  minEigenvalue;
+    // return fValue;
+    return blacklist;
+}
 
 
 
@@ -635,9 +707,14 @@ std::vector<int> FeatureSelector::select_lambdamin_randomized(image_t& subset,
     omega_horizon_t OmegaS = omega_horizon_t::Zero();
 
     int N = Delta_ells.size();
-    float eps = (exp(-kappa)+1)/2.0;
-    eps = 0.1;
+    float eps = (exp(-kappa)+exp(-kappa/float(N)))/2.0; // choosing center of the interval!
+    // eps = 0.1;
     int r = (float(N)/kappa) * log(1.0/eps);
+
+    if(r == 0)
+      ROS_WARN_STREAM("Kian: lambdamin randomized greedy with r = 0! debug: N: " << N << ", kappa: " << kappa << ", eps_low: " << exp(-kappa) << ", eps_high: " << exp(-kappa/float(N)) << ", eps_chosen: " << eps);
+
+
 
     // vector of all feature ids
     std::vector<int> ids;
