@@ -326,18 +326,89 @@ private:
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells);
   
+  std::vector<int> select_linearized(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
+
   std::vector<int> select_actualrandom(image_t& subset,
           const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
           const std::map<int, omega_horizon_t>& Delta_ells,
           const std::map<int, omega_horizon_t>& Delta_used_ells);
-  
+
+
+
   ros::Publisher pub_selection_time;
-
-
-
 
   std::map<double, int, std::greater<double>> sortedlambdaminUB(
   const omega_horizon_t& Omega, const omega_horizon_t& OmegaS,
   const std::map<int, omega_horizon_t>& Delta_ells,
   const std::vector<int>& blacklist, const image_t& image);
+
+
+
+  // these are like above ones just for analysis of time and metrics
+  std::pair<float, float> select_traceofinv_simple_analysis(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
+  std::pair<float, float> select_traceofinv_lazy_analysis(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
+  std::pair<float, float> select_traceofinv_randomized_analysis(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
+
+  std::pair<float, float> select_logdet_simple_analysis(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
+
+  std::pair<float, float> select_logdet_lazy_analysis(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
+  
+  std::pair<float, float> select_logdet_randomized_analysis(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
+
+  std::pair<float, float> select_lambdamin_simple_analysis(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
+
+  std::pair<float, float> select_lambdamin_lazy_analysis(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
+  
+  std::pair<float, float> select_lambdamin_randomized_analysis(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
+  
+  std::pair<float, float> select_linearized_analysis(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
+
+  std::pair<float, float> select_actualrandom_analysis(image_t& subset,
+          const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+          const std::map<int, omega_horizon_t>& Delta_ells,
+          const std::map<int, omega_horizon_t>& Delta_used_ells);
+  
+
+  std::map<double, int, std::greater<double>> sortedlambdaminUB_analysis(
+  const omega_horizon_t& Omega, const omega_horizon_t& OmegaS,
+  const std::map<int, omega_horizon_t>& Delta_ells,
+  const std::vector<int>& blacklist, const image_t& image);
+
+  void time_and_metric_analysis(image_t& subset,
+          const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+          const std::map<int, omega_horizon_t>& Delta_ells,
+          const std::map<int, omega_horizon_t>& Delta_used_ells);
 };

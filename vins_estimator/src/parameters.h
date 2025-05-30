@@ -10,7 +10,7 @@
 #include <opencv2/core/eigen.hpp>
 #include <fstream>
 
-const double FOCAL_LENGTH = 528.6; // Kian changed, original 460.0
+const double FOCAL_LENGTH = 460.0; // Kian changed, original 460.0 - qcar 528.6
 const int WINDOW_SIZE = 10;
 const int NUM_OF_CAM = 1;
 const int NUM_OF_F = 1000;

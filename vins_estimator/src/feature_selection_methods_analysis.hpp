@@ -1,10 +1,139 @@
 #include "feature_selector.h"
 
-std::vector<int> FeatureSelector::select_traceofinv_simple(image_t& subset,
+
+
+std::pair<double, double> calc_mean_std(std::vector<double> vec)
+{
+  // Calculating mean
+  double sum = std::accumulate(vec.begin(), vec.end(), 0.0);
+  double mean = sum / vec.size();
+
+  // Calculating standard deviation
+  double sq_sum = std::inner_product(vec.begin(), vec.end(), vec.begin(), 0.0,
+                                      std::plus<double>(), [&](double a, double b) {
+                                          return (a - mean) * (a - mean);
+                                      });
+  double stddev = std::sqrt(sq_sum / vec.size());
+
+  std::pair<double, double> res(mean, stddev);
+  return res;
+}
+
+
+void FeatureSelector::time_and_metric_analysis(image_t& subset,
+          const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+          const std::map<int, omega_horizon_t>& Delta_ells,
+          const std::map<int, omega_horizon_t>& Delta_used_ells)
+  {
+    if(Delta_ells.size() < 135) return;
+    ROS_INFO_STREAM(">>************** [feature_selector] KIAN");
+
+    int runs_for_randoms = 1;
+    // std::vector<int> kappas{10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140};
+    std::vector<int> kappas{10, 20, 30, 40, 50};
+    ROS_INFO_STREAM(" - new feature number " << Delta_ells.size());
+    ROS_INFO_STREAM(" - used feature number " << Delta_used_ells.size());
+
+    // trace of inverse metric - random
+    ROS_INFO_STREAM(" ---- trace of inverse metric - random");
+    for(const auto& kappa_ : kappas)
+    {
+      std::vector<double> fs;
+      std::vector<double> elapsed_times;
+      for(int i{}; i < runs_for_randoms; i++)
+      {
+        std::pair<float, float> res = select_actualrandom_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
+        fs.push_back(res.first);
+        elapsed_times.push_back(res.second);
+      }
+      auto fs_mean_std = calc_mean_std(fs);
+      auto ts_mean_std = calc_mean_std(elapsed_times);
+      ROS_INFO_STREAM("kappa: " << kappa_ << " - f_logdet: " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - elapsed(ms): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
+    }
+
+    // trace of inverse metric - simple greedy
+    ROS_INFO_STREAM(" ---- trace of inverse metric - simple greedy");
+    for(const auto& kappa_ : kappas)
+    {
+      std::vector<double> fs;
+      std::vector<double> elapsed_times;
+      for(int i{}; i < runs_for_randoms; i++)
+      {
+        std::pair<float, float> res = select_traceofinv_simple_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
+        fs.push_back(res.first);
+        elapsed_times.push_back(res.second);
+      }
+      auto fs_mean_std = calc_mean_std(fs);
+      auto ts_mean_std = calc_mean_std(elapsed_times);
+      ROS_INFO_STREAM("kappa: " << kappa_ << " - f_logdet: " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - elapsed(s): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
+    }
+
+    // trace of inverse metric - lazy greedy
+    ROS_INFO_STREAM(" ---- trace of inverse metric - lazy greedy");
+    for(const auto& kappa_ : kappas)
+    {
+      std::vector<double> fs;
+      std::vector<double> elapsed_times;
+      for(int i{}; i < runs_for_randoms; i++)
+      {
+        std::pair<float, float> res = select_traceofinv_lazy_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
+        fs.push_back(res.first);
+        elapsed_times.push_back(res.second);
+      }
+      auto fs_mean_std = calc_mean_std(fs);
+      auto ts_mean_std = calc_mean_std(elapsed_times);
+      ROS_INFO_STREAM("kappa: " << kappa_ << " - f_logdet: " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - elapsed(s): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
+    }
+
+    // // trace of inverse metric - randomized greedy
+    // ROS_INFO_STREAM(" ---- trace of inverse metric - randomized greedy");
+    // for(const auto& kappa_ : kappas)
+    // {
+    //   std::vector<double> fs;
+    //   std::vector<double> elapsed_times;
+    //   for(int i{}; i < runs_for_randoms; i++)
+    //   {
+    //     std::pair<float, float> res = select_traceofinv_randomized_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
+    //     fs.push_back(res.first);
+    //     elapsed_times.push_back(res.second);
+    //   }
+    //   auto fs_mean_std = calc_mean_std(fs);
+    //   auto ts_mean_std = calc_mean_std(elapsed_times);
+    //   ROS_INFO_STREAM("kappa: " << kappa_ << " - f_logdet: " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - elapsed(s): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
+    // }
+
+    // // trace of inverse metric - linearized greedy
+    // ROS_INFO_STREAM(" ---- trace of inverse metric - linearized");
+    // for(const auto& kappa_ : kappas)
+    // {
+    //   std::vector<double> fs;
+    //   std::vector<double> elapsed_times;
+    //   for(int i{}; i < runs_for_randoms; i++)
+    //   {
+    //     std::pair<float, float> res = select_linearized_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
+    //     fs.push_back(res.first);
+    //     elapsed_times.push_back(res.second);
+    //   }
+    //   auto fs_mean_std = calc_mean_std(fs);
+    //   auto ts_mean_std = calc_mean_std(elapsed_times);
+    //   ROS_INFO_STREAM("kappa: " << kappa_ << " - f_logdet: " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - elapsed(s): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
+    // }
+
+
+    ROS_INFO_STREAM("<<************** [feature_selector] KIAN");
+  }
+
+
+
+
+
+std::pair<float, float> FeatureSelector::select_traceofinv_simple_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)
   {
+    TicToc timer_ms{};
+    timer_ms.tic();
     // Combine motion information with information from features that are already
     // being used in the VINS-Mono optimization backend
     omega_horizon_t Omega = Omega_kkH;
@@ -74,10 +203,11 @@ std::vector<int> FeatureSelector::select_traceofinv_simple(image_t& subset,
     }
 
 
-    // omega_horizon_t information_matrix = Omega + OmegaS;
-    // double fValue = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
-    // return fValue;
-    return blacklist;
+    float time_ms = timer_ms.toc();
+    omega_horizon_t information_matrix = Omega + OmegaS;
+    double fValue = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
+    return std::make_pair(fValue, time_ms);
+    // return blacklist;
   }
 
 
@@ -85,11 +215,13 @@ std::vector<int> FeatureSelector::select_traceofinv_simple(image_t& subset,
 
 
 
-std::vector<int> FeatureSelector::select_traceofinv_lazy(image_t& subset,
+std::pair<float, float> FeatureSelector::select_traceofinv_lazy_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)
 {
+    TicToc timer_ms{};
+    timer_ms.tic();
     // Combine motion information with information from features that are already
     // being used in the VINS-Mono optimization backend
     omega_horizon_t Omega = Omega_kkH;
@@ -115,8 +247,8 @@ std::vector<int> FeatureSelector::select_traceofinv_lazy(image_t& subset,
 
       // min eigenvalue and min eigen vector
       Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(M);
-      double minEigenvalue = es.eigenvalues()(0);
-      Eigen::VectorXd minEigenvector = es.eigenvectors().col(0);
+      double maxEigenvalue = es.eigenvalues()(es.eigenvalues().size()-1);
+      Eigen::VectorXd maxEigenvector = es.eigenvectors().col(es.eigenvalues().size()-1);
 
 
       for (const auto& fpair : Delta_ells) {
@@ -135,8 +267,18 @@ std::vector<int> FeatureSelector::select_traceofinv_lazy(image_t& subset,
           omega_horizon_t delta = p*Delta_ells.at(feature_id);
 
           int n = M.rows();
-          double lb = n/(minEigenvalue + (delta * minEigenvector).norm());
+          double lb = 1/(maxEigenvalue + (delta * maxEigenvector).norm());
           LBs[lb] = feature_id;
+
+          // double actual = (M+delta).llt().solve(omega_horizon_t::Identity()).trace();
+          // ROS_INFO_STREAM("id: " << feature_id
+          //             << ", actual traceofinv: " << actual
+          //             << ", lowerbound: " << lb
+          //             << ", norm of minEigenvector: " << minEigenvector.norm()
+          //             << ", p: " << p
+          //             << ", denominator: " << (minEigenvalue + (delta * minEigenvector).norm())
+          //             << ", n: " << n
+          //               );
 
       }
 
@@ -150,7 +292,7 @@ std::vector<int> FeatureSelector::select_traceofinv_lazy(image_t& subset,
           double lb = fpair.first;
 
           // lazy evaluation: break if lB is greater than the current best cost
-          if (lb > fMin) break;
+          if (lb >= fMin) break;
 
           // convenience: the information matrix corresponding to this feature
           const auto& Delta_ell = Delta_ells.at(feature_id);
@@ -188,10 +330,11 @@ std::vector<int> FeatureSelector::select_traceofinv_lazy(image_t& subset,
     }
 
 
-    // omega_horizon_t information_matrix = Omega + OmegaS;
-    // double fValue = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
-    // return fValue;
-    return blacklist;
+    float time_ms = timer_ms.toc();
+    omega_horizon_t information_matrix = Omega + OmegaS;
+    double fValue = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
+    return std::make_pair(fValue, time_ms);
+    // return blacklist;
 
 }
 
@@ -199,11 +342,13 @@ std::vector<int> FeatureSelector::select_traceofinv_lazy(image_t& subset,
 
 
 
-std::vector<int> FeatureSelector::select_traceofinv_randomized(image_t& subset,
+std::pair<float, float> FeatureSelector::select_traceofinv_randomized_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)
   {
+    TicToc timer_ms{};
+    timer_ms.tic();
     // Combine motion information with information from features that are already
     // being used in the VINS-Mono optimization backend
     omega_horizon_t Omega = Omega_kkH;
@@ -279,21 +424,24 @@ std::vector<int> FeatureSelector::select_traceofinv_randomized(image_t& subset,
 
 
 
-    // omega_horizon_t information_matrix = Omega + OmegaS;
-    // double fValue = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
-    // return fValue;
-    return S;
+    float time_ms = timer_ms.toc();
+    omega_horizon_t information_matrix = Omega + OmegaS;
+    double fValue = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
+    return std::make_pair(fValue, time_ms);
+    // return S;
   }
 
 
 
 
 
-std::vector<int> FeatureSelector::select_logdet_simple(image_t& subset,
+std::pair<float, float> FeatureSelector::select_logdet_simple_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)
 {
+    TicToc timer_ms{};
+    timer_ms.tic();
     // Combine motion information with information from features that are already
     // being used in the VINS-Mono optimization backend
     omega_horizon_t Omega = Omega_kkH;
@@ -352,19 +500,22 @@ std::vector<int> FeatureSelector::select_logdet_simple(image_t& subset,
     }
 
 
-    // omega_horizon_t information_matrix = Omega + OmegaS;
-    // double fValue =  Utility::logdet(information_matrix, true);
-    // return fValue;
-    return blacklist;
+    float time_ms = timer_ms.toc();
+    omega_horizon_t information_matrix = Omega + OmegaS;
+    double fValue =  Utility::logdet(information_matrix, true);
+    return std::make_pair(fValue, time_ms);
+    // return blacklist;
 }
 
 
 
-std::vector<int> FeatureSelector::select_logdet_lazy(image_t& subset,
+std::pair<float, float> FeatureSelector::select_logdet_lazy_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)
 {
+  TicToc timer_ms{};
+  timer_ms.tic();
   // Combine motion information with information from features that are already
   // being used in the VINS-Mono optimization backend
   omega_horizon_t Omega = Omega_kkH;
@@ -431,19 +582,22 @@ std::vector<int> FeatureSelector::select_logdet_lazy(image_t& subset,
     }
   }
 
-  // omega_horizon_t information_matrix = Omega + OmegaS;
-  // double fValue = Utility::logdet(Omega + OmegaS, true);
-  // return fValue;
-  return blacklist;
+  float time_ms = timer_ms.toc();
+  omega_horizon_t information_matrix = Omega + OmegaS;
+  double fValue = Utility::logdet(Omega + OmegaS, true);
+  return std::make_pair(fValue, time_ms);
+  // return blacklist;
 }
 
 
 
-std::vector<int> FeatureSelector::select_logdet_randomized(image_t& subset,
+std::pair<float, float> FeatureSelector::select_logdet_randomized_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)
 {
+    TicToc timer_ms{};
+    timer_ms.tic();
     // Combine motion information with information from features that are already
     // being used in the VINS-Mono optimization backend
     omega_horizon_t Omega = Omega_kkH;
@@ -515,10 +669,12 @@ std::vector<int> FeatureSelector::select_logdet_randomized(image_t& subset,
         subset[feature_id_min] = image.at(feature_id_min);
       }
     }
-    // omega_horizon_t information_matrix = Omega + OmegaS;
-    // double fValue = Utility::logdet(information_matrix, true);
-    // return fValue;
-    return S;
+
+    float time_ms = timer_ms.toc();
+    omega_horizon_t information_matrix = Omega + OmegaS;
+    double fValue = Utility::logdet(information_matrix, true);
+    return std::make_pair(fValue, time_ms);
+    // return S;
 }
 
 
@@ -528,11 +684,13 @@ std::vector<int> FeatureSelector::select_logdet_randomized(image_t& subset,
 
 
 
-std::vector<int> FeatureSelector::select_lambdamin_simple(image_t& subset,
+std::pair<float, float> FeatureSelector::select_lambdamin_simple_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)
 {
+    TicToc timer_ms{};
+    timer_ms.tic();
     // Combine motion information with information from features that are already
     // being used in the VINS-Mono optimization backend
     omega_horizon_t Omega = Omega_kkH;
@@ -593,21 +751,24 @@ std::vector<int> FeatureSelector::select_lambdamin_simple(image_t& subset,
     }
 
 
-    // omega_horizon_t information_matrix = Omega + OmegaS;
-    // Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
-    // double minEigenvalue = es.eigenvalues()(0);
-    // double fValue =  minEigenvalue;
-    // return fValue;
-    return blacklist;
+    float time_ms = timer_ms.toc();
+    omega_horizon_t information_matrix = Omega + OmegaS;
+    Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
+    double minEigenvalue = es.eigenvalues()(0);
+    double fValue =  minEigenvalue;
+    return std::make_pair(fValue, time_ms);
+    // return blacklist;
 }
 
 
 
-std::vector<int> FeatureSelector::select_lambdamin_lazy(image_t& subset,
+std::pair<float, float> FeatureSelector::select_lambdamin_lazy_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)
 {  
+  TicToc timer_ms{};
+  timer_ms.tic();
   // Combine motion information with information from features that are already
   // being used in the VINS-Mono optimization backend
   omega_horizon_t Omega = Omega_kkH;
@@ -678,22 +839,25 @@ std::vector<int> FeatureSelector::select_lambdamin_lazy(image_t& subset,
     }
   }
 
-  // omega_horizon_t information_matrix = Omega + OmegaS;
-  // Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
-  // double minEigenvalue = es.eigenvalues()(0);
-  // return minEigenvalue;
+  float time_ms = timer_ms.toc();
+  omega_horizon_t information_matrix = Omega + OmegaS;
+  Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
+  double minEigenvalue = es.eigenvalues()(0);
+  return std::make_pair(minEigenvalue, time_ms);
 
-  return blacklist;
+  // return blacklist;
 }
 
 
 
 
-std::vector<int> FeatureSelector::select_lambdamin_randomized(image_t& subset,
+std::pair<float, float> FeatureSelector::select_lambdamin_randomized_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)
 {
+    TicToc timer_ms{};
+    timer_ms.tic();
     // Combine motion information with information from features that are already
     // being used in the VINS-Mono optimization backend
     omega_horizon_t Omega = Omega_kkH;
@@ -769,12 +933,13 @@ std::vector<int> FeatureSelector::select_lambdamin_randomized(image_t& subset,
       }
     }
 
-    // omega_horizon_t information_matrix = Omega + OmegaS;
-    // Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
-    // double minEigenvalue = es.eigenvalues()(0);
-    // double fValue = minEigenvalue;
-    // return fValue;
-    return S;
+    float time_ms = timer_ms.toc();
+    omega_horizon_t information_matrix = Omega + OmegaS;
+    Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
+    double minEigenvalue = es.eigenvalues()(0);
+    double fValue = minEigenvalue;
+    return std::make_pair(fValue, time_ms);
+    // return S;
 }
 
 
@@ -785,7 +950,7 @@ std::vector<int> FeatureSelector::select_lambdamin_randomized(image_t& subset,
 
 
 
-std::map<double, int, std::greater<double>> FeatureSelector::sortedlambdaminUB(
+std::map<double, int, std::greater<double>> FeatureSelector::sortedlambdaminUB_analysis(
   const omega_horizon_t& Omega, const omega_horizon_t& OmegaS,
   const std::map<int, omega_horizon_t>& Delta_ells,
   const std::vector<int>& blacklist, const image_t& image)
@@ -833,11 +998,13 @@ std::map<double, int, std::greater<double>> FeatureSelector::sortedlambdaminUB(
 
 
 
-std::vector<int> FeatureSelector::select_linearized(image_t& subset,
+std::pair<float, float> FeatureSelector::select_linearized_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)
   {
+    TicToc timer_ms{};
+    timer_ms.tic();
     // Combine motion information with information from features that are already
     // being used in the VINS-Mono optimization backend
     omega_horizon_t Omega = Omega_kkH;
@@ -878,14 +1045,17 @@ std::vector<int> FeatureSelector::select_linearized(image_t& subset,
     }
 
 
-    // for(auto id : ids)
-    // {
-    //   const auto& Delta_ell = Delta_ells.at(id);
-    //   double p = image.at(id)[0].second.coeff(fPROB);
-    //   Omega += p*Delta_ell;
-    // }
-    // return Omega.llt().solve(omega_horizon_t::Identity()).trace();
-    return ids;
+    for(auto id : ids)
+    {
+      const auto& Delta_ell = Delta_ells.at(id);
+      double p = image.at(id)[0].second.coeff(fPROB);
+      Omega += p*Delta_ell;
+    }
+
+    float time_ms = timer_ms.toc();
+    double fValue = Omega.llt().solve(omega_horizon_t::Identity()).trace();
+    return std::make_pair(fValue, time_ms);
+    // return ids;
   }
 
 
@@ -895,11 +1065,13 @@ std::vector<int> FeatureSelector::select_linearized(image_t& subset,
 
 
 
-std::vector<int> FeatureSelector::select_actualrandom(image_t& subset,
+std::pair<float, float> FeatureSelector::select_actualrandom_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)
 {
+    TicToc timer_ms{};
+    timer_ms.tic();
     std::vector<std::pair<int, omega_horizon_t>> pairs;
     // Copy the pairs from the map to the vector
     for (const auto& pair : Delta_ells)
@@ -913,16 +1085,28 @@ std::vector<int> FeatureSelector::select_actualrandom(image_t& subset,
         pairs.resize(kappa);
     }
 
+    omega_horizon_t Omega = Omega_kkH;
+    for (const auto& Delta : Delta_used_ells) {
+      int feature_id = Delta.first;
+      double p = subset.at(feature_id)[0].second.coeff(fPROB);
+      Omega += Delta.second; // KIAN: shouldn't we put p*Delta.second??
+    }
+
     std::vector<int> blacklist;
     blacklist.reserve(kappa);
     for(const auto& pair : pairs)
     {
     int id = pair.first;
     double p = image.at(id)[0].second.coeff(fPROB);
+    Omega += p*Delta_ells.at(id);
 
     subset[id] = image.at(id);
     blacklist.push_back(id);
     }
 
-    return blacklist;
+    float time_ms = timer_ms.toc();
+    omega_horizon_t information_matrix = Omega;
+    double fValue = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
+    return std::make_pair(fValue, time_ms);
+    // return blacklist;
 }
