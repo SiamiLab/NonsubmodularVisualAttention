@@ -28,9 +28,8 @@ void FeatureSelector::time_and_metric_analysis(image_t& subset,
     if(Delta_ells.size() < 135) return;
     ROS_INFO_STREAM(">>************** [feature_selector] KIAN");
 
-    int runs_for_randoms = 1;
-    // std::vector<int> kappas{10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140};
-    std::vector<int> kappas{10, 20, 30, 40, 50};
+    int runs_for_randoms = 50;
+    std::vector<int> kappas{10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 139};
     ROS_INFO_STREAM(" - new feature number " << Delta_ells.size());
     ROS_INFO_STREAM(" - used feature number " << Delta_used_ells.size());
 
@@ -85,39 +84,39 @@ void FeatureSelector::time_and_metric_analysis(image_t& subset,
       ROS_INFO_STREAM("kappa: " << kappa_ << " - f_logdet: " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - elapsed(s): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
     }
 
-    // // trace of inverse metric - randomized greedy
-    // ROS_INFO_STREAM(" ---- trace of inverse metric - randomized greedy");
-    // for(const auto& kappa_ : kappas)
-    // {
-    //   std::vector<double> fs;
-    //   std::vector<double> elapsed_times;
-    //   for(int i{}; i < runs_for_randoms; i++)
-    //   {
-    //     std::pair<float, float> res = select_traceofinv_randomized_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
-    //     fs.push_back(res.first);
-    //     elapsed_times.push_back(res.second);
-    //   }
-    //   auto fs_mean_std = calc_mean_std(fs);
-    //   auto ts_mean_std = calc_mean_std(elapsed_times);
-    //   ROS_INFO_STREAM("kappa: " << kappa_ << " - f_logdet: " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - elapsed(s): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
-    // }
+    // trace of inverse metric - randomized greedy
+    ROS_INFO_STREAM(" ---- trace of inverse metric - randomized greedy");
+    for(const auto& kappa_ : kappas)
+    {
+      std::vector<double> fs;
+      std::vector<double> elapsed_times;
+      for(int i{}; i < runs_for_randoms; i++)
+      {
+        std::pair<float, float> res = select_traceofinv_randomized_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
+        fs.push_back(res.first);
+        elapsed_times.push_back(res.second);
+      }
+      auto fs_mean_std = calc_mean_std(fs);
+      auto ts_mean_std = calc_mean_std(elapsed_times);
+      ROS_INFO_STREAM("kappa: " << kappa_ << " - f_logdet: " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - elapsed(s): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
+    }
 
-    // // trace of inverse metric - linearized greedy
-    // ROS_INFO_STREAM(" ---- trace of inverse metric - linearized");
-    // for(const auto& kappa_ : kappas)
-    // {
-    //   std::vector<double> fs;
-    //   std::vector<double> elapsed_times;
-    //   for(int i{}; i < runs_for_randoms; i++)
-    //   {
-    //     std::pair<float, float> res = select_linearized_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
-    //     fs.push_back(res.first);
-    //     elapsed_times.push_back(res.second);
-    //   }
-    //   auto fs_mean_std = calc_mean_std(fs);
-    //   auto ts_mean_std = calc_mean_std(elapsed_times);
-    //   ROS_INFO_STREAM("kappa: " << kappa_ << " - f_logdet: " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - elapsed(s): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
-    // }
+    // trace of inverse metric - linearized greedy
+    ROS_INFO_STREAM(" ---- trace of inverse metric - linearized");
+    for(const auto& kappa_ : kappas)
+    {
+      std::vector<double> fs;
+      std::vector<double> elapsed_times;
+      for(int i{}; i < runs_for_randoms; i++)
+      {
+        std::pair<float, float> res = select_linearized_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
+        fs.push_back(res.first);
+        elapsed_times.push_back(res.second);
+      }
+      auto fs_mean_std = calc_mean_std(fs);
+      auto ts_mean_std = calc_mean_std(elapsed_times);
+      ROS_INFO_STREAM("kappa: " << kappa_ << " - f_logdet: " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - elapsed(s): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
+    }
 
 
     ROS_INFO_STREAM("<<************** [feature_selector] KIAN");

@@ -193,12 +193,12 @@ FeatureSelector::select(image_t& image,
       // selectedIds = selectInformativeFeatures(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       
       // selectedIds = select_traceofinv_simple(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
-      // selectedIds = select_traceofinv_lazy(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+      selectedIds = select_traceofinv_lazy(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       // selectedIds = select_traceofinv_randomized(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       
       // selectedIds = select_logdet_simple(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       // selectedIds = select_logdet_lazy(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
-      selectedIds = select_logdet_randomized(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+      // selectedIds = select_logdet_randomized(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       
       // selectedIds = select_lambdamin_simple(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       // selectedIds = select_lambdamin_lazy(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
@@ -206,11 +206,15 @@ FeatureSelector::select(image_t& image,
       
       // selectedIds = select_linearized(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       
+      // selectedIds = select_quality(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+      
+      // selectedIds = select_uniform(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+      
       // selectedIds = select_actualrandom(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
 
 
       // time and metric analysis (comment in full experiments)
-      time_and_metric_analysis(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+      // time_and_metric_analysis(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
     }
     // send out selection time
     double selection_time_ms = t_fsel.toc();

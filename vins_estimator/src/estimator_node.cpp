@@ -335,7 +335,7 @@ void process()
             int nrImuMeasurements = static_cast<int>(measurement.first.size());
 
             // select the best features, removing poor choices from image.
-            static TicToc t_fsel("fsel_cost");
+            static TicToc t_fsel("selection_time_select_traceofinv_simple_f50");
             t_fsel.tic();
             auto selectionInfo = f_selector->select(image, img_msg->header, nrImuMeasurements);
             ROS_INFO_STREAM("Feature selection took " << t_fsel.toc() << " ms");
@@ -357,7 +357,10 @@ void process()
             }
 
             // run vins estimator on selected subset of features
+            static TicToc kian_timer("backend_time_select_traceofinv_simple_f50");
+            kian_timer.tic();
             estimator.processImage(image7, img_msg->header);
+            kian_timer.toc();
 
             double whole_t = t_s.toc();
             printStatistics(estimator, whole_t);

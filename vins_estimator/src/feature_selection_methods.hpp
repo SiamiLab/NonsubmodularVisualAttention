@@ -894,6 +894,147 @@ std::vector<int> FeatureSelector::select_linearized(image_t& subset,
 
 
 
+std::vector<int> FeatureSelector::select_quality(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells)
+  {
+    // Combine motion information with information from features that are already
+    // being used in the VINS-Mono optimization backend
+    omega_horizon_t Omega = Omega_kkH;
+    for (const auto& Delta : Delta_used_ells) {
+      int feature_id = Delta.first;
+      double p = subset.at(feature_id)[0].second.coeff(fPROB);
+      Omega += Delta.second; // KIAN: shouldn't we put p*Delta.second??
+    }
+
+    // blacklist of already selected features (by id)
+    std::vector<int> blacklist;
+    blacklist.reserve(kappa);
+
+    std::vector<std::pair<int, double>> id_score_pairs;
+    id_score_pairs.clear();
+    for (const auto& Delta : Delta_ells)
+    {
+      int feature_id = Delta.first;
+      double p = image.at(feature_id)[0].second.coeff(fPROB);
+
+      id_score_pairs.push_back({feature_id, p});
+    }
+
+    std::sort(id_score_pairs.begin(), id_score_pairs.end(), 
+              [](const std::pair<int, double>& a, const std::pair<int, double>& b){return a.second > b.second;});
+    
+    std::vector<int> top_ids;
+    top_ids.clear();
+    for(int i{}; i < kappa && i < (int)id_score_pairs.size(); i++)
+      top_ids.push_back(id_score_pairs[i].first);
+    
+    for(const auto& id : top_ids)
+      subset[id] = image.at(id);
+
+    return top_ids;
+  }
+
+
+std::vector<int> FeatureSelector::select_uniform(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells)
+  {
+    // Grid configuration
+    const int w_num = 15; // Number of horizontal divisions
+    const int h_num = 12; // Number of vertical divisions
+
+    const int image_width = m_camera_->imageWidth();
+    const int image_height = m_camera_->imageHeight();
+
+    const double cell_width = static_cast<double>(image_width) / w_num;
+    const double cell_height = static_cast<double>(image_height) / h_num;
+
+    // Define a hashable GridKey struct for unordered_map
+    struct GridKey {
+        int row;
+        int col;
+
+        bool operator==(const GridKey& other) const {
+            return row == other.row && col == other.col;
+        }
+    };
+
+    // Hash function for GridKey (C++14 style)
+    struct GridKeyHash {
+        std::size_t operator()(const GridKey& k) const {
+            return std::hash<int>()(k.row) ^ (std::hash<int>()(k.col) << 1);
+        }
+    };
+
+    // Map from grid cell to feature IDs
+    std::unordered_map<GridKey, std::vector<int>, GridKeyHash> grid_cells;
+    // Assign features to grid cells
+    for (std::map<int, omega_horizon_t>::const_iterator it = Delta_ells.begin(); it != Delta_ells.end(); ++it)
+    {
+        int feature_id = it->first;
+        if (image.count(feature_id) == 0 || image.at(feature_id).empty())
+            continue;
+
+        const Eigen::Matrix<double, 8, 1>& feat = image.at(feature_id)[0].second;
+        double u = feat[3];
+        double v = feat[4];
+
+        int col = std::min(static_cast<int>(u / cell_width), w_num - 1);
+        int row = std::min(static_cast<int>(v / cell_height), h_num - 1);
+
+        GridKey key = {row, col};
+        grid_cells[key].push_back(feature_id);
+    }
+
+    std::vector<int> selected_features;
+    std::mt19937 rng(std::random_device{}());
+
+    // Select one random feature per cell
+    for (std::unordered_map<GridKey, std::vector<int>, GridKeyHash>::iterator it = grid_cells.begin(); it != grid_cells.end(); ++it)
+    {
+        std::vector<int>& features = it->second;
+        if (!features.empty()) {
+            std::shuffle(features.begin(), features.end(), rng);
+            selected_features.push_back(features[0]);
+        }
+    }
+
+    // If not enough features, add more randomly
+    if (selected_features.size() < static_cast<size_t>(kappa)) {
+        std::set<int> selected_set(selected_features.begin(), selected_features.end());
+        std::vector<int> remaining;
+
+        for (std::map<int, omega_horizon_t>::const_iterator it = Delta_ells.begin(); it != Delta_ells.end(); ++it) {
+            int fid = it->first;
+            if (selected_set.find(fid) == selected_set.end()) {
+                remaining.push_back(fid);
+            }
+        }
+
+        std::shuffle(remaining.begin(), remaining.end(), rng);
+        for (size_t i = 0; i < remaining.size() && selected_features.size() < static_cast<size_t>(kappa); ++i) {
+            selected_features.push_back(remaining[i]);
+        }
+    }
+
+    // If too many, truncate
+    if (selected_features.size() > static_cast<size_t>(kappa)) {
+        std::shuffle(selected_features.begin(), selected_features.end(), rng);
+        selected_features.resize(kappa);
+    }
+
+    for(const auto& id : selected_features)
+      subset[id] = image.at(id);
+
+
+    return selected_features;
+  }
+
+
+
 
 std::vector<int> FeatureSelector::select_actualrandom(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,

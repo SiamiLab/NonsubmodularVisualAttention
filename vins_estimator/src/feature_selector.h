@@ -335,15 +335,25 @@ private:
           const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
           const std::map<int, omega_horizon_t>& Delta_ells,
           const std::map<int, omega_horizon_t>& Delta_used_ells);
+  
+  std::vector<int> select_quality(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
+
+  std::vector<int> select_uniform(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
 
 
 
   ros::Publisher pub_selection_time;
 
   std::map<double, int, std::greater<double>> sortedlambdaminUB(
-  const omega_horizon_t& Omega, const omega_horizon_t& OmegaS,
-  const std::map<int, omega_horizon_t>& Delta_ells,
-  const std::vector<int>& blacklist, const image_t& image);
+        const omega_horizon_t& Omega, const omega_horizon_t& OmegaS,
+        const std::map<int, omega_horizon_t>& Delta_ells,
+        const std::vector<int>& blacklist, const image_t& image);
 
 
 
