@@ -38,30 +38,30 @@ void FeatureSelector::time_and_metric_analysis(image_t& subset,
     ROS_INFO_STREAM(" - new feature number " << Delta_ells.size());
     ROS_INFO_STREAM(" - used feature number " << Delta_used_ells.size());
 
-    // trace of inverse metric - random
-    ROS_INFO_STREAM(" ---- trace of inverse metric - random");
-    for(const auto& kappa_ : kappas)
-    {
-      std::vector<double> fs;
-      std::vector<double> condition_numbers;
-      std::vector<double> elapsed_times;
-      for(int i{}; i < runs_for_randoms; i++)
-      {
-        std::pair<float, omega_horizon_t> res = select_actualrandom_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
-        omega_horizon_t information_matrix = res.second;
-        Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
-        Eigen::VectorXd eigvals = es.eigenvalues();
-        double MSE = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
-        double condition_number = eigvals(eigvals.size()-1) / eigvals(0);
-        elapsed_times.push_back(res.first);
-        fs.push_back(MSE);
-        condition_numbers.push_back(condition_number);
-      }
-      auto ts_mean_std = calc_mean_std(elapsed_times);
-      auto fs_mean_std = calc_mean_std(fs);
-      auto cn_mean_std = calc_mean_std(condition_numbers);
-      ROS_INFO_STREAM("kappa: " << kappa_ << " - f(s): " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - condition num: " << cn_mean_std.first << " (std: " << cn_mean_std.second << ")" << " - elapsed(ms): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
-    }
+    // // trace of inverse metric - random
+    // ROS_INFO_STREAM(" ---- trace of inverse metric - random");
+    // for(const auto& kappa_ : kappas)
+    // {
+    //   std::vector<double> fs;
+    //   std::vector<double> condition_numbers;
+    //   std::vector<double> elapsed_times;
+    //   for(int i{}; i < runs_for_randoms; i++)
+    //   {
+    //     std::pair<float, omega_horizon_t> res = select_actualrandom_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
+    //     omega_horizon_t information_matrix = res.second;
+    //     Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
+    //     Eigen::VectorXd eigvals = es.eigenvalues();
+    //     double MSE = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
+    //     double condition_number = eigvals(eigvals.size()-1) / eigvals(0);
+    //     elapsed_times.push_back(res.first);
+    //     fs.push_back(MSE);
+    //     condition_numbers.push_back(condition_number);
+    //   }
+    //   auto ts_mean_std = calc_mean_std(elapsed_times);
+    //   auto fs_mean_std = calc_mean_std(fs);
+    //   auto cn_mean_std = calc_mean_std(condition_numbers);
+    //   ROS_INFO_STREAM("kappa: " << kappa_ << " - f(s): " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - condition num: " << cn_mean_std.first << " (std: " << cn_mean_std.second << ")" << " - elapsed(ms): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
+    // }
 
     // trace of inverse metric - simple greedy
     ROS_INFO_STREAM(" ---- trace of inverse metric - simple greedy");
@@ -105,55 +105,55 @@ void FeatureSelector::time_and_metric_analysis(image_t& subset,
     //   ROS_INFO_STREAM("kappa: " << kappa_ << " - f_logdet: " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - elapsed(s): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
     // }
 
-    // trace of inverse metric - randomized greedy
-    ROS_INFO_STREAM(" ---- trace of inverse metric - randomized greedy");
-    for(const auto& kappa_ : kappas)
-    {
-      std::vector<double> fs;
-      std::vector<double> condition_numbers;
-      std::vector<double> elapsed_times;
-      for(int i{}; i < runs_for_randoms; i++)
-      {
-        std::pair<float, omega_horizon_t> res = select_traceofinv_randomized_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
-        omega_horizon_t information_matrix = res.second;
-        Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
-        Eigen::VectorXd eigvals = es.eigenvalues();
-        double MSE = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
-        double condition_number = eigvals(eigvals.size()-1) / eigvals(0);
-        elapsed_times.push_back(res.first);
-        fs.push_back(MSE);
-        condition_numbers.push_back(condition_number);
-      }
-      auto ts_mean_std = calc_mean_std(elapsed_times);
-      auto fs_mean_std = calc_mean_std(fs);
-      auto cn_mean_std = calc_mean_std(condition_numbers);
-      ROS_INFO_STREAM("kappa: " << kappa_ << " - f(s): " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - condition num: " << cn_mean_std.first << " (std: " << cn_mean_std.second << ")" << " - elapsed(ms): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
-    }
+    // // trace of inverse metric - randomized greedy
+    // ROS_INFO_STREAM(" ---- trace of inverse metric - randomized greedy");
+    // for(const auto& kappa_ : kappas)
+    // {
+    //   std::vector<double> fs;
+    //   std::vector<double> condition_numbers;
+    //   std::vector<double> elapsed_times;
+    //   for(int i{}; i < runs_for_randoms; i++)
+    //   {
+    //     std::pair<float, omega_horizon_t> res = select_traceofinv_randomized_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
+    //     omega_horizon_t information_matrix = res.second;
+    //     Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
+    //     Eigen::VectorXd eigvals = es.eigenvalues();
+    //     double MSE = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
+    //     double condition_number = eigvals(eigvals.size()-1) / eigvals(0);
+    //     elapsed_times.push_back(res.first);
+    //     fs.push_back(MSE);
+    //     condition_numbers.push_back(condition_number);
+    //   }
+    //   auto ts_mean_std = calc_mean_std(elapsed_times);
+    //   auto fs_mean_std = calc_mean_std(fs);
+    //   auto cn_mean_std = calc_mean_std(condition_numbers);
+    //   ROS_INFO_STREAM("kappa: " << kappa_ << " - f(s): " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - condition num: " << cn_mean_std.first << " (std: " << cn_mean_std.second << ")" << " - elapsed(ms): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
+    // }
 
-    // trace of inverse metric - linearized greedy
-    ROS_INFO_STREAM(" ---- trace of inverse metric - linearized");
-    for(const auto& kappa_ : kappas)
-    {
-      std::vector<double> fs;
-      std::vector<double> condition_numbers;
-      std::vector<double> elapsed_times;
-      for(int i{}; i < runs_for_randoms; i++)
-      {
-        std::pair<float, omega_horizon_t> res = select_linearized_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
-        omega_horizon_t information_matrix = res.second;
-        Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
-        Eigen::VectorXd eigvals = es.eigenvalues();
-        double MSE = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
-        double condition_number = eigvals(eigvals.size()-1) / eigvals(0);
-        elapsed_times.push_back(res.first);
-        fs.push_back(MSE);
-        condition_numbers.push_back(condition_number);
-      }
-      auto ts_mean_std = calc_mean_std(elapsed_times);
-      auto fs_mean_std = calc_mean_std(fs);
-      auto cn_mean_std = calc_mean_std(condition_numbers);
-      ROS_INFO_STREAM("kappa: " << kappa_ << " - f(s): " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - condition num: " << cn_mean_std.first << " (std: " << cn_mean_std.second << ")" << " - elapsed(ms): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
-    }
+    // // trace of inverse metric - linearized greedy
+    // ROS_INFO_STREAM(" ---- trace of inverse metric - linearized");
+    // for(const auto& kappa_ : kappas)
+    // {
+    //   std::vector<double> fs;
+    //   std::vector<double> condition_numbers;
+    //   std::vector<double> elapsed_times;
+    //   for(int i{}; i < runs_for_randoms; i++)
+    //   {
+    //     std::pair<float, omega_horizon_t> res = select_linearized_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
+    //     omega_horizon_t information_matrix = res.second;
+    //     Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
+    //     Eigen::VectorXd eigvals = es.eigenvalues();
+    //     double MSE = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
+    //     double condition_number = eigvals(eigvals.size()-1) / eigvals(0);
+    //     elapsed_times.push_back(res.first);
+    //     fs.push_back(MSE);
+    //     condition_numbers.push_back(condition_number);
+    //   }
+    //   auto ts_mean_std = calc_mean_std(elapsed_times);
+    //   auto fs_mean_std = calc_mean_std(fs);
+    //   auto cn_mean_std = calc_mean_std(condition_numbers);
+    //   ROS_INFO_STREAM("kappa: " << kappa_ << " - f(s): " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - condition num: " << cn_mean_std.first << " (std: " << cn_mean_std.second << ")" << " - elapsed(ms): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
+    // }
 
 
     ROS_INFO_STREAM("<<************** [feature_selector] KIAN");

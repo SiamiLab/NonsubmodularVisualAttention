@@ -133,6 +133,8 @@ FeatureSelector::select(image_t& image,
   // Future State Generation
   //
 
+  static TicToc change_horizon_timing{};
+  change_horizon_timing.tic();
   // We will need to know the state at each frame in the horizon, k:k+H.
   // Note that this includes the current optimized state, xk
   auto state_kkH = generateFutureHorizon(header, nrImuMeasurements, deltaImu, deltaF);
@@ -164,6 +166,7 @@ FeatureSelector::select(image_t& image,
   // Calculate the information content of each of the currently used features
   std::map<int, omega_horizon_t> Delta_used_ells;
   Delta_used_ells = calcInfoFromFeatures(subset, state_kkH);
+  ROS_INFO_STREAM("Kian: time take to generate horizon and delta_ells: " << change_horizon_timing.toc() << " ms");
 
   //
   // Attention: Select a subset of features that maximizes expected information
@@ -213,9 +216,10 @@ FeatureSelector::select(image_t& image,
       // selectedIds = select_actualrandom(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
 
 
-      // time and metric analysis (comment in full experiments)
-      // time_and_metric_analysis(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
     }
+    // time and metric analysis (comment in full experiments)
+    time_and_metric_analysis(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+    
     // send out selection time
     double selection_time_ms = t_fsel.toc();
     geometry_msgs::Vector3Stamped msg;

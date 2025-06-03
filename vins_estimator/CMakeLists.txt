@@ -31,6 +31,8 @@ include_directories(
   ${EIGEN3_INCLUDE_DIR}
   lib/nanoflann
 )
+add_definitions(-DEIGEN_STACK_ALLOCATION_LIMIT=262144)
+
 
 catkin_package()
 
