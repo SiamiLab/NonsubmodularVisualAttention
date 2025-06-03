@@ -25,11 +25,16 @@ void FeatureSelector::time_and_metric_analysis(image_t& subset,
           const std::map<int, omega_horizon_t>& Delta_ells,
           const std::map<int, omega_horizon_t>& Delta_used_ells)
   {
-    if(Delta_ells.size() < 135) return;
+    static int frame_counter_ = 0;
+    frame_counter_++;
+    ROS_INFO_STREAM("kian: delta ell size: " << Delta_ells.size() << "frame: " << frame_counter_);
+    if(Delta_ells.size() < 136) return;
+
     ROS_INFO_STREAM(">>************** [feature_selector] KIAN");
 
-    int runs_for_randoms = 50;
-    std::vector<int> kappas{10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 139};
+    int runs_for_randoms = 20;
+    // std::vector<int> kappas{10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, Delta_ells.size()};
+    std::vector<int> kappas{50, 70, 90, 110};
     ROS_INFO_STREAM(" - new feature number " << Delta_ells.size());
     ROS_INFO_STREAM(" - used feature number " << Delta_used_ells.size());
 
@@ -38,16 +43,24 @@ void FeatureSelector::time_and_metric_analysis(image_t& subset,
     for(const auto& kappa_ : kappas)
     {
       std::vector<double> fs;
+      std::vector<double> condition_numbers;
       std::vector<double> elapsed_times;
       for(int i{}; i < runs_for_randoms; i++)
       {
-        std::pair<float, float> res = select_actualrandom_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
-        fs.push_back(res.first);
-        elapsed_times.push_back(res.second);
+        std::pair<float, omega_horizon_t> res = select_actualrandom_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
+        omega_horizon_t information_matrix = res.second;
+        Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
+        Eigen::VectorXd eigvals = es.eigenvalues();
+        double MSE = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
+        double condition_number = eigvals(eigvals.size()-1) / eigvals(0);
+        elapsed_times.push_back(res.first);
+        fs.push_back(MSE);
+        condition_numbers.push_back(condition_number);
       }
-      auto fs_mean_std = calc_mean_std(fs);
       auto ts_mean_std = calc_mean_std(elapsed_times);
-      ROS_INFO_STREAM("kappa: " << kappa_ << " - f_logdet: " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - elapsed(ms): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
+      auto fs_mean_std = calc_mean_std(fs);
+      auto cn_mean_std = calc_mean_std(condition_numbers);
+      ROS_INFO_STREAM("kappa: " << kappa_ << " - f(s): " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - condition num: " << cn_mean_std.first << " (std: " << cn_mean_std.second << ")" << " - elapsed(ms): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
     }
 
     // trace of inverse metric - simple greedy
@@ -55,50 +68,66 @@ void FeatureSelector::time_and_metric_analysis(image_t& subset,
     for(const auto& kappa_ : kappas)
     {
       std::vector<double> fs;
+      std::vector<double> condition_numbers;
       std::vector<double> elapsed_times;
       for(int i{}; i < runs_for_randoms; i++)
       {
-        std::pair<float, float> res = select_traceofinv_simple_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
-        fs.push_back(res.first);
-        elapsed_times.push_back(res.second);
+        std::pair<float, omega_horizon_t> res = select_traceofinv_simple_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
+        omega_horizon_t information_matrix = res.second;
+        Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
+        Eigen::VectorXd eigvals = es.eigenvalues();
+        double MSE = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
+        double condition_number = eigvals(eigvals.size()-1) / eigvals(0);
+        elapsed_times.push_back(res.first);
+        fs.push_back(MSE);
+        condition_numbers.push_back(condition_number);
       }
-      auto fs_mean_std = calc_mean_std(fs);
       auto ts_mean_std = calc_mean_std(elapsed_times);
-      ROS_INFO_STREAM("kappa: " << kappa_ << " - f_logdet: " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - elapsed(s): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
+      auto fs_mean_std = calc_mean_std(fs);
+      auto cn_mean_std = calc_mean_std(condition_numbers);
+      ROS_INFO_STREAM("kappa: " << kappa_ << " - f(s): " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - condition num: " << cn_mean_std.first << " (std: " << cn_mean_std.second << ")" << " - elapsed(ms): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
     }
 
-    // trace of inverse metric - lazy greedy
-    ROS_INFO_STREAM(" ---- trace of inverse metric - lazy greedy");
-    for(const auto& kappa_ : kappas)
-    {
-      std::vector<double> fs;
-      std::vector<double> elapsed_times;
-      for(int i{}; i < runs_for_randoms; i++)
-      {
-        std::pair<float, float> res = select_traceofinv_lazy_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
-        fs.push_back(res.first);
-        elapsed_times.push_back(res.second);
-      }
-      auto fs_mean_std = calc_mean_std(fs);
-      auto ts_mean_std = calc_mean_std(elapsed_times);
-      ROS_INFO_STREAM("kappa: " << kappa_ << " - f_logdet: " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - elapsed(s): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
-    }
+    // // trace of inverse metric - lazy greedy WRONG!!!
+    // ROS_INFO_STREAM(" ---- trace of inverse metric - lazy greedy");
+    // for(const auto& kappa_ : kappas)
+    // {
+    //   std::vector<double> fs;
+    //   std::vector<double> elapsed_times;
+    //   for(int i{}; i < runs_for_randoms; i++)
+    //   {
+    //     std::pair<float, omega_horizon_t> res = select_traceofinv_lazy_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
+    //     fs.push_back(res.first);
+    //     elapsed_times.push_back(res.second);
+    //   }
+    //   auto fs_mean_std = calc_mean_std(fs);
+    //   auto ts_mean_std = calc_mean_std(elapsed_times);
+    //   ROS_INFO_STREAM("kappa: " << kappa_ << " - f_logdet: " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - elapsed(s): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
+    // }
 
     // trace of inverse metric - randomized greedy
     ROS_INFO_STREAM(" ---- trace of inverse metric - randomized greedy");
     for(const auto& kappa_ : kappas)
     {
       std::vector<double> fs;
+      std::vector<double> condition_numbers;
       std::vector<double> elapsed_times;
       for(int i{}; i < runs_for_randoms; i++)
       {
-        std::pair<float, float> res = select_traceofinv_randomized_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
-        fs.push_back(res.first);
-        elapsed_times.push_back(res.second);
+        std::pair<float, omega_horizon_t> res = select_traceofinv_randomized_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
+        omega_horizon_t information_matrix = res.second;
+        Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
+        Eigen::VectorXd eigvals = es.eigenvalues();
+        double MSE = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
+        double condition_number = eigvals(eigvals.size()-1) / eigvals(0);
+        elapsed_times.push_back(res.first);
+        fs.push_back(MSE);
+        condition_numbers.push_back(condition_number);
       }
-      auto fs_mean_std = calc_mean_std(fs);
       auto ts_mean_std = calc_mean_std(elapsed_times);
-      ROS_INFO_STREAM("kappa: " << kappa_ << " - f_logdet: " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - elapsed(s): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
+      auto fs_mean_std = calc_mean_std(fs);
+      auto cn_mean_std = calc_mean_std(condition_numbers);
+      ROS_INFO_STREAM("kappa: " << kappa_ << " - f(s): " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - condition num: " << cn_mean_std.first << " (std: " << cn_mean_std.second << ")" << " - elapsed(ms): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
     }
 
     // trace of inverse metric - linearized greedy
@@ -106,16 +135,24 @@ void FeatureSelector::time_and_metric_analysis(image_t& subset,
     for(const auto& kappa_ : kappas)
     {
       std::vector<double> fs;
+      std::vector<double> condition_numbers;
       std::vector<double> elapsed_times;
       for(int i{}; i < runs_for_randoms; i++)
       {
-        std::pair<float, float> res = select_linearized_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
-        fs.push_back(res.first);
-        elapsed_times.push_back(res.second);
+        std::pair<float, omega_horizon_t> res = select_linearized_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
+        omega_horizon_t information_matrix = res.second;
+        Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
+        Eigen::VectorXd eigvals = es.eigenvalues();
+        double MSE = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
+        double condition_number = eigvals(eigvals.size()-1) / eigvals(0);
+        elapsed_times.push_back(res.first);
+        fs.push_back(MSE);
+        condition_numbers.push_back(condition_number);
       }
-      auto fs_mean_std = calc_mean_std(fs);
       auto ts_mean_std = calc_mean_std(elapsed_times);
-      ROS_INFO_STREAM("kappa: " << kappa_ << " - f_logdet: " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - elapsed(s): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
+      auto fs_mean_std = calc_mean_std(fs);
+      auto cn_mean_std = calc_mean_std(condition_numbers);
+      ROS_INFO_STREAM("kappa: " << kappa_ << " - f(s): " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - condition num: " << cn_mean_std.first << " (std: " << cn_mean_std.second << ")" << " - elapsed(ms): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
     }
 
 
@@ -126,7 +163,7 @@ void FeatureSelector::time_and_metric_analysis(image_t& subset,
 
 
 
-std::pair<float, float> FeatureSelector::select_traceofinv_simple_analysis(image_t& subset,
+std::pair<float, omega_horizon_t> FeatureSelector::select_traceofinv_simple_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)
@@ -204,8 +241,8 @@ std::pair<float, float> FeatureSelector::select_traceofinv_simple_analysis(image
 
     float time_ms = timer_ms.toc();
     omega_horizon_t information_matrix = Omega + OmegaS;
-    double fValue = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
-    return std::make_pair(fValue, time_ms);
+    // double fValue = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
+    return std::make_pair(time_ms, information_matrix);
     // return blacklist;
   }
 
@@ -214,7 +251,7 @@ std::pair<float, float> FeatureSelector::select_traceofinv_simple_analysis(image
 
 
 
-std::pair<float, float> FeatureSelector::select_traceofinv_lazy_analysis(image_t& subset,
+std::pair<float, omega_horizon_t> FeatureSelector::select_traceofinv_lazy_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)
@@ -244,11 +281,13 @@ std::pair<float, float> FeatureSelector::select_traceofinv_lazy_analysis(image_t
       std::map<double, int, std::greater<double>> LBs;
       const omega_horizon_t M = Omega + OmegaS;
 
-      // min eigenvalue and min eigen vector
-      Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(M);
-      double maxEigenvalue = es.eigenvalues()(es.eigenvalues().size()-1);
-      Eigen::VectorXd maxEigenvector = es.eigenvectors().col(es.eigenvalues().size()-1);
-
+      // // min eigenvalue and min eigen vector
+      // Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(M);
+      // double maxEigenvalue = es.eigenvalues()(es.eigenvalues().size()-1);
+      // Eigen::VectorXd maxEigenvector = es.eigenvectors().col(es.eigenvalues().size()-1);
+      
+      // Eigen::SelfAdjointEigenSolver<omega_horizon_t> es_M(M);
+      // Eigen::VectorXd eigvals_M = es_M.eigenvalues();
 
       for (const auto& fpair : Delta_ells) {
           int feature_id = fpair.first;
@@ -266,18 +305,36 @@ std::pair<float, float> FeatureSelector::select_traceofinv_lazy_analysis(image_t
           omega_horizon_t delta = p*Delta_ells.at(feature_id);
 
           int n = M.rows();
-          double lb = 1/(maxEigenvalue + (delta * maxEigenvector).norm());
+          
+          // eigenvalues
+          Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(M+delta);
+          Eigen::VectorXd eigvals = es.eigenvalues();
+
+          double log_sum = 0.0;
+          for (int i = 0; i < n; ++i) {
+              log_sum += std::log(eigvals[i]);
+          }
+
+          double log_result = -log_sum / n;
+          double lb = n * std::exp(log_result);
+
+
+
+          // Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(delta);
+          // Eigen::VectorXd eigvals = es.eigenvalues();
+
+          // double lb = n / (eigvals(eigvals.size()-1) + eigvals_M(eigvals_M.size()-1));
+          
+
           LBs[lb] = feature_id;
 
-          // double actual = (M+delta).llt().solve(omega_horizon_t::Identity()).trace();
-          // ROS_INFO_STREAM("id: " << feature_id
-          //             << ", actual traceofinv: " << actual
-          //             << ", lowerbound: " << lb
-          //             << ", norm of minEigenvector: " << minEigenvector.norm()
-          //             << ", p: " << p
-          //             << ", denominator: " << (minEigenvalue + (delta * minEigenvector).norm())
-          //             << ", n: " << n
-          //               );
+          double actual = (M+delta).llt().solve(omega_horizon_t::Identity()).trace();
+          ROS_INFO_STREAM("id: " << feature_id
+                      << ", actual traceofinv: " << actual
+                      << ", lowerbound: " << lb
+                      << ", p: " << p
+                      << ", n: " << n
+                        );
 
       }
 
@@ -331,8 +388,8 @@ std::pair<float, float> FeatureSelector::select_traceofinv_lazy_analysis(image_t
 
     float time_ms = timer_ms.toc();
     omega_horizon_t information_matrix = Omega + OmegaS;
-    double fValue = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
-    return std::make_pair(fValue, time_ms);
+    // double fValue = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
+    return std::make_pair(time_ms, information_matrix);
     // return blacklist;
 
 }
@@ -341,7 +398,7 @@ std::pair<float, float> FeatureSelector::select_traceofinv_lazy_analysis(image_t
 
 
 
-std::pair<float, float> FeatureSelector::select_traceofinv_randomized_analysis(image_t& subset,
+std::pair<float, omega_horizon_t> FeatureSelector::select_traceofinv_randomized_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)
@@ -425,8 +482,8 @@ std::pair<float, float> FeatureSelector::select_traceofinv_randomized_analysis(i
 
     float time_ms = timer_ms.toc();
     omega_horizon_t information_matrix = Omega + OmegaS;
-    double fValue = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
-    return std::make_pair(fValue, time_ms);
+    // double fValue = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
+    return std::make_pair(time_ms, information_matrix);
     // return S;
   }
 
@@ -434,7 +491,7 @@ std::pair<float, float> FeatureSelector::select_traceofinv_randomized_analysis(i
 
 
 
-std::pair<float, float> FeatureSelector::select_logdet_simple_analysis(image_t& subset,
+std::pair<float, omega_horizon_t> FeatureSelector::select_logdet_simple_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)
@@ -501,14 +558,14 @@ std::pair<float, float> FeatureSelector::select_logdet_simple_analysis(image_t& 
 
     float time_ms = timer_ms.toc();
     omega_horizon_t information_matrix = Omega + OmegaS;
-    double fValue =  Utility::logdet(information_matrix, true);
-    return std::make_pair(fValue, time_ms);
+    // double fValue =  Utility::logdet(information_matrix, true);
+    return std::make_pair(time_ms, information_matrix);
     // return blacklist;
 }
 
 
 
-std::pair<float, float> FeatureSelector::select_logdet_lazy_analysis(image_t& subset,
+std::pair<float, omega_horizon_t> FeatureSelector::select_logdet_lazy_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)
@@ -583,14 +640,14 @@ std::pair<float, float> FeatureSelector::select_logdet_lazy_analysis(image_t& su
 
   float time_ms = timer_ms.toc();
   omega_horizon_t information_matrix = Omega + OmegaS;
-  double fValue = Utility::logdet(Omega + OmegaS, true);
-  return std::make_pair(fValue, time_ms);
+  // double fValue = Utility::logdet(Omega + OmegaS, true);
+  return std::make_pair(time_ms, information_matrix);
   // return blacklist;
 }
 
 
 
-std::pair<float, float> FeatureSelector::select_logdet_randomized_analysis(image_t& subset,
+std::pair<float, omega_horizon_t> FeatureSelector::select_logdet_randomized_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)
@@ -671,8 +728,8 @@ std::pair<float, float> FeatureSelector::select_logdet_randomized_analysis(image
 
     float time_ms = timer_ms.toc();
     omega_horizon_t information_matrix = Omega + OmegaS;
-    double fValue = Utility::logdet(information_matrix, true);
-    return std::make_pair(fValue, time_ms);
+    // double fValue = Utility::logdet(information_matrix, true);
+    return std::make_pair(time_ms, information_matrix);
     // return S;
 }
 
@@ -683,7 +740,7 @@ std::pair<float, float> FeatureSelector::select_logdet_randomized_analysis(image
 
 
 
-std::pair<float, float> FeatureSelector::select_lambdamin_simple_analysis(image_t& subset,
+std::pair<float, omega_horizon_t> FeatureSelector::select_lambdamin_simple_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)
@@ -752,16 +809,16 @@ std::pair<float, float> FeatureSelector::select_lambdamin_simple_analysis(image_
 
     float time_ms = timer_ms.toc();
     omega_horizon_t information_matrix = Omega + OmegaS;
-    Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
-    double minEigenvalue = es.eigenvalues()(0);
-    double fValue =  minEigenvalue;
-    return std::make_pair(fValue, time_ms);
+    // Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
+    // double minEigenvalue = es.eigenvalues()(0);
+    // double fValue =  minEigenvalue;
+    return std::make_pair(time_ms, information_matrix);
     // return blacklist;
 }
 
 
 
-std::pair<float, float> FeatureSelector::select_lambdamin_lazy_analysis(image_t& subset,
+std::pair<float, omega_horizon_t> FeatureSelector::select_lambdamin_lazy_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)
@@ -840,9 +897,9 @@ std::pair<float, float> FeatureSelector::select_lambdamin_lazy_analysis(image_t&
 
   float time_ms = timer_ms.toc();
   omega_horizon_t information_matrix = Omega + OmegaS;
-  Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
-  double minEigenvalue = es.eigenvalues()(0);
-  return std::make_pair(minEigenvalue, time_ms);
+  // Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
+  // double minEigenvalue = es.eigenvalues()(0);
+  return std::make_pair(time_ms, information_matrix);
 
   // return blacklist;
 }
@@ -850,7 +907,7 @@ std::pair<float, float> FeatureSelector::select_lambdamin_lazy_analysis(image_t&
 
 
 
-std::pair<float, float> FeatureSelector::select_lambdamin_randomized_analysis(image_t& subset,
+std::pair<float, omega_horizon_t> FeatureSelector::select_lambdamin_randomized_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)
@@ -934,10 +991,10 @@ std::pair<float, float> FeatureSelector::select_lambdamin_randomized_analysis(im
 
     float time_ms = timer_ms.toc();
     omega_horizon_t information_matrix = Omega + OmegaS;
-    Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
-    double minEigenvalue = es.eigenvalues()(0);
-    double fValue = minEigenvalue;
-    return std::make_pair(fValue, time_ms);
+    // Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
+    // double minEigenvalue = es.eigenvalues()(0);
+    // double fValue = minEigenvalue;
+    return std::make_pair(time_ms, information_matrix);
     // return S;
 }
 
@@ -997,7 +1054,7 @@ std::map<double, int, std::greater<double>> FeatureSelector::sortedlambdaminUB_a
 
 
 
-std::pair<float, float> FeatureSelector::select_linearized_analysis(image_t& subset,
+std::pair<float, omega_horizon_t> FeatureSelector::select_linearized_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)
@@ -1052,8 +1109,8 @@ std::pair<float, float> FeatureSelector::select_linearized_analysis(image_t& sub
     }
 
     float time_ms = timer_ms.toc();
-    double fValue = Omega.llt().solve(omega_horizon_t::Identity()).trace();
-    return std::make_pair(fValue, time_ms);
+    // double fValue = Omega.llt().solve(omega_horizon_t::Identity()).trace();
+    return std::make_pair(time_ms, Omega);
     // return ids;
   }
 
@@ -1064,7 +1121,7 @@ std::pair<float, float> FeatureSelector::select_linearized_analysis(image_t& sub
 
 
 
-std::pair<float, float> FeatureSelector::select_actualrandom_analysis(image_t& subset,
+std::pair<float, omega_horizon_t> FeatureSelector::select_actualrandom_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)
@@ -1105,7 +1162,7 @@ std::pair<float, float> FeatureSelector::select_actualrandom_analysis(image_t& s
 
     float time_ms = timer_ms.toc();
     omega_horizon_t information_matrix = Omega;
-    double fValue = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
-    return std::make_pair(fValue, time_ms);
+    // double fValue = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
+    return std::make_pair(time_ms, information_matrix);
     // return blacklist;
 }

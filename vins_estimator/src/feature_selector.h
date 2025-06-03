@@ -358,55 +358,55 @@ private:
 
 
   // these are like above ones just for analysis of time and metrics
-  std::pair<float, float> select_traceofinv_simple_analysis(image_t& subset,
+  std::pair<float, omega_horizon_t> select_traceofinv_simple_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells);
-  std::pair<float, float> select_traceofinv_lazy_analysis(image_t& subset,
+  std::pair<float, omega_horizon_t> select_traceofinv_lazy_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells);
-  std::pair<float, float> select_traceofinv_randomized_analysis(image_t& subset,
-            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
-            const std::map<int, omega_horizon_t>& Delta_ells,
-            const std::map<int, omega_horizon_t>& Delta_used_ells);
-
-  std::pair<float, float> select_logdet_simple_analysis(image_t& subset,
+  std::pair<float, omega_horizon_t> select_traceofinv_randomized_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells);
 
-  std::pair<float, float> select_logdet_lazy_analysis(image_t& subset,
+  std::pair<float, omega_horizon_t> select_logdet_simple_analysis(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
+
+  std::pair<float, omega_horizon_t> select_logdet_lazy_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells);
   
-  std::pair<float, float> select_logdet_randomized_analysis(image_t& subset,
+  std::pair<float, omega_horizon_t> select_logdet_randomized_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells);
 
-  std::pair<float, float> select_lambdamin_simple_analysis(image_t& subset,
+  std::pair<float, omega_horizon_t> select_lambdamin_simple_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells);
 
-  std::pair<float, float> select_lambdamin_lazy_analysis(image_t& subset,
+  std::pair<float, omega_horizon_t> select_lambdamin_lazy_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells);
   
-  std::pair<float, float> select_lambdamin_randomized_analysis(image_t& subset,
+  std::pair<float, omega_horizon_t> select_lambdamin_randomized_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells);
   
-  std::pair<float, float> select_linearized_analysis(image_t& subset,
+  std::pair<float, omega_horizon_t> select_linearized_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells);
 
-  std::pair<float, float> select_actualrandom_analysis(image_t& subset,
+  std::pair<float, omega_horizon_t> select_actualrandom_analysis(image_t& subset,
           const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
           const std::map<int, omega_horizon_t>& Delta_ells,
           const std::map<int, omega_horizon_t>& Delta_used_ells);
