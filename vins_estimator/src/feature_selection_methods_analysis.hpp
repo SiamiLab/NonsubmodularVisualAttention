@@ -32,7 +32,7 @@ void FeatureSelector::time_and_metric_analysis(image_t& subset,
 
     ROS_INFO_STREAM(">>************** [feature_selector] KIAN");
 
-    int runs_for_randoms = 20;
+    int runs_for_randoms = 10;
     // std::vector<int> kappas{10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, Delta_ells.size()};
     std::vector<int> kappas{50, 70, 90, 110};
     ROS_INFO_STREAM(" - new feature number " << Delta_ells.size());
