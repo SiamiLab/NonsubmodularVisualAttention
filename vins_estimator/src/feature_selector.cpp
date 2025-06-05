@@ -160,8 +160,9 @@ FeatureSelector::select(image_t& image,
 
   // Calculate the information content of each of the new features
   // auto Delta_ells = calcInfoFromFeatures(image_new, state_kkH); // simpler method
-  auto Delta_ells = calcInfoFromFeatures_Full(image_new, state_kkH); // the original method by kian
-
+  std::map<int, Eigen::MatrixXd> Fs;
+  std::map<int, Eigen::MatrixXd> Ps;
+  auto Delta_ells = calcInfoFromFeatures_Full(image_new, state_kkH, Fs, Ps); // the original method by kian
 
 
   // Calculate the information content of each of the currently used features

@@ -283,7 +283,9 @@ private:
 
   
 
-  std::map<int, omega_horizon_t> calcInfoFromFeatures_Full(const image_t& image, const state_horizon_t& state_kkH);
+  std::map<int, omega_horizon_t> calcInfoFromFeatures_Full(const image_t& image,
+                const state_horizon_t& state_kkH,
+                std::map<int, Eigen::MatrixXd>& Fs, std::map<int, Eigen::MatrixXd>& Ps);
   
   std::vector<int> select_traceofinv_simple(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,

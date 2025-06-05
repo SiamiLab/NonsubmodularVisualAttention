@@ -4,7 +4,8 @@
 
 std::map<int, omega_horizon_t> FeatureSelector::calcInfoFromFeatures_Full(
     const image_t& image,
-    const state_horizon_t& state_kkH)
+    const state_horizon_t& state_kkH,
+    std::map<int, Eigen::MatrixXd>& Fs, std::map<int, Eigen::MatrixXd>& Ps)
 {
   std::map<int, omega_horizon_t> Delta_ells;
 
@@ -92,6 +93,8 @@ std::map<int, omega_horizon_t> FeatureSelector::calcInfoFromFeatures_Full(
 
     omega_horizon_t fixedDelta = Delta;  // need to convert Eigen::MatrixXd to omega_horizon_t -> implicit conversion (safe when sizes match)
     Delta_ells[feature_id] = fixedDelta;
+    Fs[feature_id] = F;
+    Ps[feature_id] = P;
   }
 
   return Delta_ells;
