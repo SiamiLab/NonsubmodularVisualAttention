@@ -1,5 +1,104 @@
 #include "feature_selector.h"
 
+
+
+std::map<int, omega_horizon_t> FeatureSelector::calcInfoFromFeatures_Full(
+    const image_t& image,
+    const state_horizon_t& state_kkH)
+{
+  std::map<int, omega_horizon_t> Delta_ells;
+
+  const auto& t_WC_k1 = state_k1_.first.segment<3>(xPOS) + state_k1_.second * t_IC_;
+  const auto& q_WC_k1 = state_k1_.second * q_IC_;
+
+  auto depthsByIdx = initKDTree();
+
+  for (const auto& fpair : image) {
+    constexpr int c = 0;
+    int feature_id = fpair.first;
+    Eigen::Vector3d feature = fpair.second[c].second.head<3>();
+
+    double d = findNNDepth(depthsByIdx, feature.coeff(0), feature.coeff(1));
+    feature = feature.normalized() * d;
+
+
+    auto pell = t_WC_k1 + q_WC_k1 * feature;
+
+    std::vector<Eigen::Matrix<double, 3, 9 * (HORIZON+1)>> F_blocks;
+    std::vector<Eigen::Matrix<double, 3, 3>> E_blocks;
+    int numVisible = 0;
+
+    //
+    // ---- Handle k+1 frame separately (assumed detection frame)
+    //
+    {
+      Eigen::Vector3d uell = (q_WC_k1.inverse() * (pell - t_WC_k1)).normalized();
+      Eigen::Vector2d pixels;
+      m_camera_->spaceToPlane(uell, pixels);
+      if (inFOV(pixels)) {
+        Eigen::Matrix<double, 3, 9 * (HORIZON+1)> F_row = Eigen::Matrix<double, 3, 9 * (HORIZON+1)>::Zero();
+        Eigen::Matrix3d Bh = Utility::skewSymmetric(uell) * ((q_WC_k1 * q_IC_).inverse()).toRotationMatrix();
+        F_row.block<3, 3>(0, 9) = Bh;
+
+        F_blocks.push_back(F_row);
+        E_blocks.push_back(-Bh);
+        ++numVisible;
+      }
+    }
+
+    //
+    // ---- Forward simulate from k+2 to k+H (h = 2 onward)
+    //
+    for (int h = 2; h <= HORIZON; ++h) {
+      const auto& t_WC_h = state_kkH[h].first.segment<3>(xPOS) + state_kkH[h].second * t_IC_;
+      const auto& q_WC_h = state_kkH[h].second * q_IC_;
+
+      Eigen::Vector3d uell = (q_WC_h.inverse() * (pell - t_WC_h)).normalized();
+      Eigen::Vector2d pixels;
+      m_camera_->spaceToPlane(uell, pixels);
+      if (!inFOV(pixels)) continue;
+      
+
+      Eigen::Matrix<double, 3, 9 * (HORIZON+1)> F_row = Eigen::Matrix<double, 3, 9 * (HORIZON+1)>::Zero();
+      Eigen::Matrix3d Bh = Utility::skewSymmetric(uell) * ((q_WC_h * q_IC_).inverse()).toRotationMatrix();
+      F_row.block<3, 3>(0, 9 * h) = Bh;
+
+
+      F_blocks.push_back(F_row);
+      E_blocks.push_back(-Bh);
+      ++numVisible;
+    }
+
+    // Require at least 2 views for triangulation
+    if (numVisible < 2) continue;
+
+    // Stack F and E matrices
+    const int m = numVisible;
+    Eigen::MatrixXd F(m * 3, 9 * (HORIZON+1));
+    Eigen::MatrixXd E(m * 3, 3);
+    for (int i = 0; i < m; ++i) {
+      F.block<3, 9 * (HORIZON+1)>(3 * i, 0) = F_blocks[i];
+      E.block<3, 3>(3 * i, 0) = E_blocks[i];
+    }
+
+    // Compute Schur complement form
+    Eigen::MatrixXd I = Eigen::MatrixXd::Identity(m * 3, m * 3);
+    Eigen::Matrix3d EtE = E.transpose() * E;
+    if (EtE.determinant() < 1e-10) continue;
+
+    Eigen::MatrixXd P = I - E * EtE.inverse() * E.transpose();
+    Eigen::MatrixXd Delta = F.transpose() * P * F;
+
+
+    omega_horizon_t fixedDelta = Delta;  // need to convert Eigen::MatrixXd to omega_horizon_t -> implicit conversion (safe when sizes match)
+    Delta_ells[feature_id] = fixedDelta;
+  }
+
+  return Delta_ells;
+}
+
+
+
 std::vector<int> FeatureSelector::select_traceofinv_simple(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,

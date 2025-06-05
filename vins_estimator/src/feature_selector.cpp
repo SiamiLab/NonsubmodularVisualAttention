@@ -159,11 +159,15 @@ FeatureSelector::select(image_t& image,
   }
 
   // Calculate the information content of each of the new features
-  auto Delta_ells = calcInfoFromFeatures(image_new, state_kkH);
+  // auto Delta_ells = calcInfoFromFeatures(image_new, state_kkH); // simpler method
+  auto Delta_ells = calcInfoFromFeatures_Full(image_new, state_kkH); // the original method by kian
+
+
 
   // Calculate the information content of each of the currently used features
   std::map<int, omega_horizon_t> Delta_used_ells;
   Delta_used_ells = calcInfoFromFeatures(subset, state_kkH);
+  
 
   //
   // Attention: Select a subset of features that maximizes expected information
@@ -317,6 +321,7 @@ std::map<int, omega_horizon_t> FeatureSelector::calcInfoFromFeatures(
     double d = findNNDepth(depthsByIdx, feature.coeff(0), feature.coeff(1));
     feature = feature.normalized() * d;
 
+
     // Estimated position of the landmark w.r.t the world frame
     auto pell = t_WC_k1 + q_WC_k1 * feature;
 
@@ -352,9 +357,10 @@ std::map<int, omega_horizon_t> FeatureSelector::calcInfoFromFeatures(
       Eigen::Vector2d pixels;
       m_camera_->spaceToPlane(uell, pixels);
 
+
       // If not visible from this pose, skip
       if (!inFOV(pixels)) continue;
-
+      
       // Calculate sub-block of Delta_ell (zero-indexing)
       Eigen::Matrix3d Bh = Utility::skewSymmetric(uell)*((q_WC_h*q_IC_).inverse()).toRotationMatrix();
       Ch.block<3, 3>(0, 3*(h-1)) = Bh.transpose()*Bh;
@@ -416,6 +422,7 @@ std::map<int, omega_horizon_t> FeatureSelector::calcInfoFromFeatures(
     // Store this information matrix with its associated feature ID
     Delta_ells[feature_id] = Delta_ell;
   }
+
   return Delta_ells;
 }
 
