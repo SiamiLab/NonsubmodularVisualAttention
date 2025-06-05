@@ -101,6 +101,96 @@ std::map<int, omega_horizon_t> FeatureSelector::calcInfoFromFeatures_Full(
 }
 
 
+std::vector<int> FeatureSelector::select_low_rank_update(image_t& subset,
+          const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+          const std::map<int, omega_horizon_t>& Delta_ells,
+          const std::map<int, omega_horizon_t>& Delta_used_ells,
+          const std::map<int, Eigen::MatrixXd>& Fs,
+          const std::map<int, Eigen::MatrixXd>& Ps)
+  {
+    omega_horizon_t Omega = Omega_kkH;
+    for (const auto& Delta : Delta_used_ells) {
+        int feature_id = Delta.first;
+        double p = subset.at(feature_id)[0].second.coeff(fPROB);
+        Omega += Delta.second; // KIAN: shouldn't we put p*Delta.second??
+    }
+
+    // blacklist of already selected features (by id)
+    std::vector<int> blacklist;
+    blacklist.reserve(kappa);
+
+    // combined information of subset
+    omega_horizon_t OmegaS = omega_horizon_t::Zero();
+
+    // select the indices of the best features
+    for (int i=0; i<kappa; ++i)
+    {
+        double f_min = 10000000;
+        int feature_id_min = -1;
+
+        omega_horizon_t A = Omega + OmegaS; // Omega base for low rank update
+        omega_horizon_t A_inv = A.llt().solve(omega_horizon_t::Identity());
+        for (const auto& Delta : Delta_ells)
+        {
+          int feature_id = Delta.first;
+          // check if this feature chosen before; if yes: skip
+          bool in_blacklist = std::find(blacklist.begin(), blacklist.end(), feature_id) != blacklist.end();
+          if (in_blacklist) continue;
+
+          double p = image.at(feature_id)[0].second.coeff(fPROB);
+
+          // low rank update
+          const Eigen::MatrixXd& F = Fs.at(feature_id);
+          const Eigen::MatrixXd& P = Ps.at(feature_id);
+          
+          // Eigen::MatrixXd S = Eigen::MatrixXd::Identity(P.rows(), P.rows())/p + F * A_inv * F.transpose() * P;
+          // omega_horizon_t information_matrix_tmp_inv = A_inv - A_inv * F.transpose() * P * S.inverse() * F * A_inv;
+          const auto F_txP = F.transpose() * P;
+          const auto FxA_inv = F * A_inv;
+          Eigen::MatrixXd I = Eigen::MatrixXd::Identity(P.rows(), P.rows());
+          Eigen::MatrixXd S = I/p + FxA_inv * F_txP;
+          Eigen::MatrixXd S_inv = S.llt().solve(I);
+          omega_horizon_t information_matrix_tmp_inv = A_inv - A_inv * F_txP * S_inv * FxA_inv;
+          
+          double f_tmp = information_matrix_tmp_inv.trace();
+
+
+          // // old (direct) method
+          // TicToc tt2{};
+          // tt2.tic();
+          // omega_horizon_t information_matrix_tmp = Omega + OmegaS + p*Delta.second;
+          // double f_tmp_old = information_matrix_tmp.llt().solve(omega_horizon_t::Identity()).trace();
+          // double time_ms_old = tt2.toc();
+
+          // ROS_INFO_STREAM("Kian: new: " << f_tmp << " (" << time_ms_new << " ms)" << " - old: " << f_tmp_old << " (" << time_ms_old << " ms)");
+
+
+
+          if(f_tmp < f_min)
+          {
+              f_min = f_tmp;
+              feature_id_min = feature_id;
+          }
+        }
+        // if feature_id_max == -1 there was likely a nan (probably because roundoff error
+        // caused det(M) < 0). I guess there just won't be a feature this iter.
+        if (feature_id_min > -1) {
+          double p = image.at(feature_id_min)[0].second.coeff(fPROB);
+          OmegaS += p*Delta_ells.at(feature_id_min);
+
+          // add feature that returns the most information to the subset
+          subset[feature_id_min] = image.at(feature_id_min);
+
+          // mark as used
+          blacklist.push_back(feature_id_min);
+        }
+
+    }
+
+    return blacklist;
+  }
+
+
 
 std::vector<int> FeatureSelector::select_traceofinv_simple(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,

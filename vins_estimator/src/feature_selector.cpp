@@ -197,12 +197,14 @@ FeatureSelector::select(image_t& image,
     }else{
       // selectedIds = selectInformativeFeatures(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       
+      selectedIds = select_low_rank_update(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells, Fs, Ps);
+
       // selectedIds = select_traceofinv_simple(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       // selectedIds = select_traceofinv_lazy(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       // selectedIds = select_traceofinv_randomized(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       
       // selectedIds = select_logdet_simple(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
-      selectedIds = select_logdet_lazy(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+      // selectedIds = select_logdet_lazy(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       // selectedIds = select_logdet_randomized(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       
       // selectedIds = select_lambdamin_simple(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);

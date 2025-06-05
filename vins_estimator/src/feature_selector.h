@@ -286,6 +286,12 @@ private:
   std::map<int, omega_horizon_t> calcInfoFromFeatures_Full(const image_t& image,
                 const state_horizon_t& state_kkH,
                 std::map<int, Eigen::MatrixXd>& Fs, std::map<int, Eigen::MatrixXd>& Ps);
+  std::vector<int> select_low_rank_update(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells,
+            const std::map<int, Eigen::MatrixXd>& Fs,
+            const std::map<int, Eigen::MatrixXd>& Ps);
   
   std::vector<int> select_traceofinv_simple(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
