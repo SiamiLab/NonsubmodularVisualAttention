@@ -149,8 +149,7 @@ std::vector<int> FeatureSelector::select_low_rank_update(image_t& subset,
           const auto FxA_inv = F * A_inv;
           Eigen::MatrixXd I = Eigen::MatrixXd::Identity(P.rows(), P.rows());
           Eigen::MatrixXd S = I/p + FxA_inv * F_txP;
-          Eigen::MatrixXd S_inv = S.llt().solve(I);
-          omega_horizon_t information_matrix_tmp_inv = A_inv - A_inv * F_txP * S_inv * FxA_inv;
+          omega_horizon_t information_matrix_tmp_inv = A_inv - A_inv * F_txP * S.inverse() * FxA_inv;
           
           double f_tmp = information_matrix_tmp_inv.trace();
 
@@ -158,11 +157,12 @@ std::vector<int> FeatureSelector::select_low_rank_update(image_t& subset,
           // // old (direct) method
           // TicToc tt2{};
           // tt2.tic();
-          // omega_horizon_t information_matrix_tmp = Omega + OmegaS + p*Delta.second;
-          // double f_tmp_old = information_matrix_tmp.llt().solve(omega_horizon_t::Identity()).trace();
+          omega_horizon_t information_matrix_tmp = Omega + OmegaS + p*Delta.second;
+          double f_tmp_old = information_matrix_tmp.llt().solve(omega_horizon_t::Identity()).trace();
           // double time_ms_old = tt2.toc();
 
           // ROS_INFO_STREAM("Kian: new: " << f_tmp << " (" << time_ms_new << " ms)" << " - old: " << f_tmp_old << " (" << time_ms_old << " ms)");
+          ROS_INFO_STREAM("Kian: new: " << f_tmp  << " - old: " << f_tmp_old);
 
 
 
@@ -1129,7 +1129,7 @@ std::vector<int> FeatureSelector::select_quality(image_t& subset,
   }
 
 
-std::vector<int> FeatureSelector::select_uniform(image_t& subset,
+std::vector<int> FeatureSelector::select_grid(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells)

@@ -351,7 +351,7 @@ private:
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells);
 
-  std::vector<int> select_uniform(image_t& subset,
+  std::vector<int> select_grid(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
             const std::map<int, omega_horizon_t>& Delta_used_ells);
@@ -368,6 +368,13 @@ private:
 
 
   // these are like above ones just for analysis of time and metrics
+  std::pair<float, omega_horizon_t> select_low_rank_update_analysis(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells,
+            const std::map<int, Eigen::MatrixXd>& Fs,
+            const std::map<int, Eigen::MatrixXd>& Ps);
+
   std::pair<float, omega_horizon_t> select_traceofinv_simple_analysis(image_t& subset,
             const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
             const std::map<int, omega_horizon_t>& Delta_ells,
@@ -420,6 +427,10 @@ private:
           const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
           const std::map<int, omega_horizon_t>& Delta_ells,
           const std::map<int, omega_horizon_t>& Delta_used_ells);
+  std::pair<float, omega_horizon_t> select_grid_analysis(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells);
   
 
   std::map<double, int, std::greater<double>> sortedlambdaminUB_analysis(
@@ -430,5 +441,7 @@ private:
   void time_and_metric_analysis(image_t& subset,
           const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
           const std::map<int, omega_horizon_t>& Delta_ells,
-          const std::map<int, omega_horizon_t>& Delta_used_ells);
+          const std::map<int, omega_horizon_t>& Delta_used_ells,
+          const std::map<int, Eigen::MatrixXd>& Fs,
+          const std::map<int, Eigen::MatrixXd>& Ps);
 };

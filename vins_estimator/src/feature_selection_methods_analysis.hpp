@@ -23,18 +23,23 @@ std::pair<double, double> calc_mean_std(std::vector<double> vec)
 void FeatureSelector::time_and_metric_analysis(image_t& subset,
           const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
           const std::map<int, omega_horizon_t>& Delta_ells,
-          const std::map<int, omega_horizon_t>& Delta_used_ells)
+          const std::map<int, omega_horizon_t>& Delta_used_ells,
+          const std::map<int, Eigen::MatrixXd>& Fs,
+          const std::map<int, Eigen::MatrixXd>& Ps)
   {
-    static int frame_counter_ = 0;
-    frame_counter_++;
-    ROS_INFO_STREAM("kian: delta ell size: " << Delta_ells.size() << "frame: " << frame_counter_);
+    static int all_frame_counter_ = 0;
+    static int good_frame_counter_ = 0;
+    all_frame_counter_++;
+    ROS_INFO_STREAM("kian: delta ell size: " << Delta_ells.size() << "frame: " << all_frame_counter_);
     if(Delta_ells.size() < 136) return;
+    good_frame_counter_++;
+    if(good_frame_counter_ != 3) return;
 
     ROS_INFO_STREAM(">>************** [feature_selector] KIAN");
 
     int runs_for_randoms = 20;
-    // std::vector<int> kappas{10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, Delta_ells.size()};
-    std::vector<int> kappas{50, 70, 90, 110};
+    std::vector<int> kappas{10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, Delta_ells.size()};
+    // std::vector<int> kappas{10, Delta_ells.size()};
     ROS_INFO_STREAM(" - new feature number " << Delta_ells.size());
     ROS_INFO_STREAM(" - used feature number " << Delta_used_ells.size());
 
@@ -88,22 +93,30 @@ void FeatureSelector::time_and_metric_analysis(image_t& subset,
       ROS_INFO_STREAM("kappa: " << kappa_ << " - f(s): " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - condition num: " << cn_mean_std.first << " (std: " << cn_mean_std.second << ")" << " - elapsed(ms): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
     }
 
-    // // trace of inverse metric - lazy greedy WRONG!!!
-    // ROS_INFO_STREAM(" ---- trace of inverse metric - lazy greedy");
-    // for(const auto& kappa_ : kappas)
-    // {
-    //   std::vector<double> fs;
-    //   std::vector<double> elapsed_times;
-    //   for(int i{}; i < runs_for_randoms; i++)
-    //   {
-    //     std::pair<float, omega_horizon_t> res = select_traceofinv_lazy_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
-    //     fs.push_back(res.first);
-    //     elapsed_times.push_back(res.second);
-    //   }
-    //   auto fs_mean_std = calc_mean_std(fs);
-    //   auto ts_mean_std = calc_mean_std(elapsed_times);
-    //   ROS_INFO_STREAM("kappa: " << kappa_ << " - f_logdet: " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - elapsed(s): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
-    // }
+    // trace of inverse metric - low rank update
+    ROS_INFO_STREAM(" ---- trace of inverse metric - low rank update");
+    for(const auto& kappa_ : kappas)
+    {
+      std::vector<double> fs;
+      std::vector<double> condition_numbers;
+      std::vector<double> elapsed_times;
+      for(int i{}; i < runs_for_randoms; i++)
+      {
+        std::pair<float, omega_horizon_t> res = select_low_rank_update_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells, Fs, Ps);
+        omega_horizon_t information_matrix = res.second;
+        Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
+        Eigen::VectorXd eigvals = es.eigenvalues();
+        double MSE = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
+        double condition_number = eigvals(eigvals.size()-1) / eigvals(0);
+        elapsed_times.push_back(res.first);
+        fs.push_back(MSE);
+        condition_numbers.push_back(condition_number);
+      }
+      auto ts_mean_std = calc_mean_std(elapsed_times);
+      auto fs_mean_std = calc_mean_std(fs);
+      auto cn_mean_std = calc_mean_std(condition_numbers);
+      ROS_INFO_STREAM("kappa: " << kappa_ << " - f(s): " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - condition num: " << cn_mean_std.first << " (std: " << cn_mean_std.second << ")" << " - elapsed(ms): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
+    }
 
     // trace of inverse metric - randomized greedy
     ROS_INFO_STREAM(" ---- trace of inverse metric - randomized greedy");
@@ -155,9 +168,242 @@ void FeatureSelector::time_and_metric_analysis(image_t& subset,
       ROS_INFO_STREAM("kappa: " << kappa_ << " - f(s): " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - condition num: " << cn_mean_std.first << " (std: " << cn_mean_std.second << ")" << " - elapsed(ms): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
     }
 
+    // trace of inverse metric - grid
+    ROS_INFO_STREAM(" ---- trace of inverse metric - grid");
+    for(const auto& kappa_ : kappas)
+    {
+      std::vector<double> fs;
+      std::vector<double> condition_numbers;
+      std::vector<double> elapsed_times;
+      for(int i{}; i < runs_for_randoms; i++)
+      {
+        std::pair<float, omega_horizon_t> res = select_grid_analysis(subset, image, kappa_, Omega_kkH, Delta_ells, Delta_used_ells);
+        omega_horizon_t information_matrix = res.second;
+        Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(information_matrix);
+        Eigen::VectorXd eigvals = es.eigenvalues();
+        double MSE = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
+        double condition_number = eigvals(eigvals.size()-1) / eigvals(0);
+        elapsed_times.push_back(res.first);
+        fs.push_back(MSE);
+        condition_numbers.push_back(condition_number);
+      }
+      auto ts_mean_std = calc_mean_std(elapsed_times);
+      auto fs_mean_std = calc_mean_std(fs);
+      auto cn_mean_std = calc_mean_std(condition_numbers);
+      ROS_INFO_STREAM("kappa: " << kappa_ << " - f(s): " << fs_mean_std.first << " (std: " << fs_mean_std.second << ")" << " - condition num: " << cn_mean_std.first << " (std: " << cn_mean_std.second << ")" << " - elapsed(ms): " << ts_mean_std.first << " (std: " << ts_mean_std.second << ")" << " (AVG FOR " << runs_for_randoms << " runs)");
+    }
+
 
     ROS_INFO_STREAM("<<************** [feature_selector] KIAN");
   }
+
+
+
+
+std::pair<float, omega_horizon_t> FeatureSelector::select_low_rank_update_analysis(image_t& subset,
+          const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+          const std::map<int, omega_horizon_t>& Delta_ells,
+          const std::map<int, omega_horizon_t>& Delta_used_ells,
+          const std::map<int, Eigen::MatrixXd>& Fs,
+          const std::map<int, Eigen::MatrixXd>& Ps)
+  {
+    TicToc timer_ms{};
+    timer_ms.tic();
+    omega_horizon_t Omega = Omega_kkH;
+    for (const auto& Delta : Delta_used_ells) {
+        int feature_id = Delta.first;
+        double p = subset.at(feature_id)[0].second.coeff(fPROB);
+        Omega += Delta.second; // KIAN: shouldn't we put p*Delta.second??
+    }
+
+    // blacklist of already selected features (by id)
+    std::vector<int> blacklist;
+    blacklist.reserve(kappa);
+
+    // combined information of subset
+    omega_horizon_t OmegaS = omega_horizon_t::Zero();
+
+    // select the indices of the best features
+    for (int i=0; i<kappa; ++i)
+    {
+        double f_min = 10000000;
+        int feature_id_min = -1;
+
+        omega_horizon_t A = Omega + OmegaS; // Omega base for low rank update
+        omega_horizon_t A_inv = A.llt().solve(omega_horizon_t::Identity());
+        for (const auto& Delta : Delta_ells)
+        {
+          int feature_id = Delta.first;
+          // check if this feature chosen before; if yes: skip
+          bool in_blacklist = std::find(blacklist.begin(), blacklist.end(), feature_id) != blacklist.end();
+          if (in_blacklist) continue;
+
+          double p = image.at(feature_id)[0].second.coeff(fPROB);
+
+          // low rank update
+          const Eigen::MatrixXd& F = Fs.at(feature_id);
+          const Eigen::MatrixXd& P = Ps.at(feature_id);
+          
+          // Eigen::MatrixXd S = Eigen::MatrixXd::Identity(P.rows(), P.rows())/p + F * A_inv * F.transpose() * P;
+          // omega_horizon_t information_matrix_tmp_inv = A_inv - A_inv * F.transpose() * P * S.inverse() * F * A_inv;
+          const auto F_txP = F.transpose() * P;
+          const auto FxA_inv = F * A_inv;
+          Eigen::MatrixXd I = Eigen::MatrixXd::Identity(P.rows(), P.rows());
+          Eigen::MatrixXd S = I/p + FxA_inv * F_txP;
+          omega_horizon_t information_matrix_tmp_inv = A_inv - A_inv * F_txP * S.inverse() * FxA_inv;
+          
+          double f_tmp = information_matrix_tmp_inv.trace();
+
+
+          if(f_tmp < f_min)
+          {
+              f_min = f_tmp;
+              feature_id_min = feature_id;
+          }
+        }
+        // if feature_id_max == -1 there was likely a nan (probably because roundoff error
+        // caused det(M) < 0). I guess there just won't be a feature this iter.
+        if (feature_id_min > -1) {
+          double p = image.at(feature_id_min)[0].second.coeff(fPROB);
+          OmegaS += p*Delta_ells.at(feature_id_min);
+
+          // add feature that returns the most information to the subset
+          subset[feature_id_min] = image.at(feature_id_min);
+
+          // mark as used
+          blacklist.push_back(feature_id_min);
+        }
+
+    }
+
+    float time_ms = timer_ms.toc();
+    omega_horizon_t information_matrix = Omega + OmegaS;
+    return std::make_pair(time_ms, information_matrix);
+  }
+
+
+
+
+
+
+std::pair<float, omega_horizon_t> FeatureSelector::select_grid_analysis(image_t& subset,
+            const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+            const std::map<int, omega_horizon_t>& Delta_ells,
+            const std::map<int, omega_horizon_t>& Delta_used_ells)
+  {
+    TicToc timer_ms{};
+    timer_ms.tic();
+    // Grid configuration
+    const int w_num = 15; // Number of horizontal divisions
+    const int h_num = 12; // Number of vertical divisions
+
+    const int image_width = m_camera_->imageWidth();
+    const int image_height = m_camera_->imageHeight();
+
+    const double cell_width = static_cast<double>(image_width) / w_num;
+    const double cell_height = static_cast<double>(image_height) / h_num;
+
+    // Define a hashable GridKey struct for unordered_map
+    struct GridKey {
+        int row;
+        int col;
+
+        bool operator==(const GridKey& other) const {
+            return row == other.row && col == other.col;
+        }
+    };
+
+    // Hash function for GridKey (C++14 style)
+    struct GridKeyHash {
+        std::size_t operator()(const GridKey& k) const {
+            return std::hash<int>()(k.row) ^ (std::hash<int>()(k.col) << 1);
+        }
+    };
+
+    // Map from grid cell to feature IDs
+    std::unordered_map<GridKey, std::vector<int>, GridKeyHash> grid_cells;
+    // Assign features to grid cells
+    for (std::map<int, omega_horizon_t>::const_iterator it = Delta_ells.begin(); it != Delta_ells.end(); ++it)
+    {
+        int feature_id = it->first;
+        if (image.count(feature_id) == 0 || image.at(feature_id).empty())
+            continue;
+
+        const Eigen::Matrix<double, 8, 1>& feat = image.at(feature_id)[0].second;
+        double u = feat[3];
+        double v = feat[4];
+
+        int col = std::min(static_cast<int>(u / cell_width), w_num - 1);
+        int row = std::min(static_cast<int>(v / cell_height), h_num - 1);
+
+        GridKey key = {row, col};
+        grid_cells[key].push_back(feature_id);
+    }
+
+    std::vector<int> selected_features;
+    std::mt19937 rng(std::random_device{}());
+
+    // Select one random feature per cell
+    for (std::unordered_map<GridKey, std::vector<int>, GridKeyHash>::iterator it = grid_cells.begin(); it != grid_cells.end(); ++it)
+    {
+        std::vector<int>& features = it->second;
+        if (!features.empty()) {
+            std::shuffle(features.begin(), features.end(), rng);
+            selected_features.push_back(features[0]);
+        }
+    }
+
+    // If not enough features, add more randomly
+    if (selected_features.size() < static_cast<size_t>(kappa)) {
+        std::set<int> selected_set(selected_features.begin(), selected_features.end());
+        std::vector<int> remaining;
+
+        for (std::map<int, omega_horizon_t>::const_iterator it = Delta_ells.begin(); it != Delta_ells.end(); ++it) {
+            int fid = it->first;
+            if (selected_set.find(fid) == selected_set.end()) {
+                remaining.push_back(fid);
+            }
+        }
+
+        std::shuffle(remaining.begin(), remaining.end(), rng);
+        for (size_t i = 0; i < remaining.size() && selected_features.size() < static_cast<size_t>(kappa); ++i) {
+            selected_features.push_back(remaining[i]);
+        }
+    }
+
+    // If too many, truncate
+    if (selected_features.size() > static_cast<size_t>(kappa)) {
+        std::shuffle(selected_features.begin(), selected_features.end(), rng);
+        selected_features.resize(kappa);
+    }
+
+    float time_ms = timer_ms.toc();
+    
+    
+
+    omega_horizon_t Omega = Omega_kkH;
+    for (const auto& Delta : Delta_used_ells) {
+      int feature_id = Delta.first;
+      double p = subset.at(feature_id)[0].second.coeff(fPROB);
+      Omega += Delta.second; // KIAN: shouldn't we put p*Delta.second??
+    }
+
+    for(const auto& id : selected_features)
+    {
+      double p = image.at(id)[0].second.coeff(fPROB);
+      Omega += p*Delta_ells.at(id);
+
+      subset[id] = image.at(id);
+    }
+
+    omega_horizon_t information_matrix = Omega;
+    return std::make_pair(time_ms, information_matrix);
+
+  }
+
+
+
+
 
 
 
@@ -1141,6 +1387,8 @@ std::pair<float, omega_horizon_t> FeatureSelector::select_actualrandom_analysis(
         pairs.resize(kappa);
     }
 
+    float time_ms = timer_ms.toc();
+
     omega_horizon_t Omega = Omega_kkH;
     for (const auto& Delta : Delta_used_ells) {
       int feature_id = Delta.first;
@@ -1160,7 +1408,6 @@ std::pair<float, omega_horizon_t> FeatureSelector::select_actualrandom_analysis(
     blacklist.push_back(id);
     }
 
-    float time_ms = timer_ms.toc();
     omega_horizon_t information_matrix = Omega;
     // double fValue = information_matrix.llt().solve(omega_horizon_t::Identity()).trace();
     return std::make_pair(time_ms, information_matrix);
