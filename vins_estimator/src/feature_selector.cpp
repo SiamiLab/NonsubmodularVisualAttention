@@ -222,6 +222,7 @@ FeatureSelector::select(image_t& image,
 
       // time and metric analysis (comment in full experiments)
       // time_and_metric_analysis(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells, Fs, Ps);
+      // linearized_bound_analysis(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
     }
     // send out selection time
     double selection_time_ms = t_fsel.toc();

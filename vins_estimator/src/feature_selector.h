@@ -444,4 +444,8 @@ private:
           const std::map<int, omega_horizon_t>& Delta_used_ells,
           const std::map<int, Eigen::MatrixXd>& Fs,
           const std::map<int, Eigen::MatrixXd>& Ps);
+  void linearized_bound_analysis(image_t& subset,
+          const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+          const std::map<int, omega_horizon_t>& Delta_ells,
+          const std::map<int, omega_horizon_t>& Delta_used_ells);
 };

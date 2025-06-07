@@ -19,6 +19,28 @@ std::pair<double, double> calc_mean_std(std::vector<double> vec)
   return res;
 }
 
+void FeatureSelector::linearized_bound_analysis(image_t& subset,
+          const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
+          const std::map<int, omega_horizon_t>& Delta_ells,
+          const std::map<int, omega_horizon_t>& Delta_used_ells)
+    {
+      Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(Omega_kkH);
+      double Omega_min_eigen_value = es.eigenvalues()(0);
+      ROS_INFO_STREAM("*********");
+      ROS_INFO_STREAM("Omega_min_eigen_value: " << Omega_min_eigen_value);
+      for (const auto& Delta : Delta_ells)
+      {
+        int feature_id = Delta.first;
+        double p = image.at(feature_id)[0].second.coeff(fPROB);
+        omega_horizon_t Delta_ell = p*Delta_ells.at(feature_id);
+        double Delta_ell_frobenius_norm = Delta_ell.norm();
+        ROS_INFO_STREAM("Delta_ell_frobenius_norm: " << Delta_ell_frobenius_norm);
+      }
+
+
+
+    }
+
 
 void FeatureSelector::time_and_metric_analysis(image_t& subset,
           const image_t& image, int kappa, const omega_horizon_t& Omega_kkH,
