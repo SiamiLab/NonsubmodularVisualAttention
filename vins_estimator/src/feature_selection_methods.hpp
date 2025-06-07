@@ -162,7 +162,7 @@ std::vector<int> FeatureSelector::select_low_rank_update(image_t& subset,
           // double time_ms_old = tt2.toc();
 
           // ROS_INFO_STREAM("Kian: new: " << f_tmp << " (" << time_ms_new << " ms)" << " - old: " << f_tmp_old << " (" << time_ms_old << " ms)");
-          ROS_INFO_STREAM("Kian: new: " << f_tmp  << " - old: " << f_tmp_old);
+          // ROS_INFO_STREAM("Kian: new: " << f_tmp  << " - old: " << f_tmp_old);
 
 
 
