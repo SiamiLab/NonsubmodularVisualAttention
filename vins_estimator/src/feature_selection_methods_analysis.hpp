@@ -24,18 +24,32 @@ void FeatureSelector::linearized_bound_analysis(image_t& subset,
           const std::map<int, omega_horizon_t>& Delta_ells,
           const std::map<int, omega_horizon_t>& Delta_used_ells)
     {
-      Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(Omega_kkH);
-      double Omega_min_eigen_value = es.eigenvalues()(0);
-      ROS_INFO_STREAM("*********");
-      ROS_INFO_STREAM("Omega_min_eigen_value: " << Omega_min_eigen_value);
+      // // first check
+      // Eigen::SelfAdjointEigenSolver<omega_horizon_t> es(Omega_kkH);
+      // double Omega_min_eigen_value = es.eigenvalues()(0);
+      // ROS_INFO_STREAM("*********");
+      // ROS_INFO_STREAM("Omega_min_eigen_value: " << Omega_min_eigen_value);
+      // for (const auto& Delta : Delta_ells)
+      // {
+      //   int feature_id = Delta.first;
+      //   double p = image.at(feature_id)[0].second.coeff(fPROB);
+      //   omega_horizon_t Delta_ell = p*Delta_ells.at(feature_id);
+      //   double Delta_ell_frobenius_norm = Delta_ell.norm();
+      //   ROS_INFO_STREAM("Delta_ell_frobenius_norm: " << Delta_ell_frobenius_norm);
+      // }
+
+      // second check
+      omega_horizon_t Delta_ells_sum = Eigen::Matrix<double, 126, 126>::Zero();
       for (const auto& Delta : Delta_ells)
       {
         int feature_id = Delta.first;
         double p = image.at(feature_id)[0].second.coeff(fPROB);
-        omega_horizon_t Delta_ell = p*Delta_ells.at(feature_id);
-        double Delta_ell_frobenius_norm = Delta_ell.norm();
-        ROS_INFO_STREAM("Delta_ell_frobenius_norm: " << Delta_ell_frobenius_norm);
+        Delta_ells_sum += p*Delta_ells.at(feature_id);
       }
+      omega_horizon_t my_matrix = Omega_kkH.inverse() * Delta_ells_sum;
+      Eigen::JacobiSVD<omega_horizon_t> svd(my_matrix);
+      double norm2 = svd.singularValues()(0);
+      ROS_INFO_STREAM("Kian: **** norm2: " << norm2 << ", largest epsilon: " << 1.0/norm2);
 
 
 
