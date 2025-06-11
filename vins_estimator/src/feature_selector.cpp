@@ -159,10 +159,10 @@ FeatureSelector::select(image_t& image,
   }
 
   // Calculate the information content of each of the new features
-  auto Delta_ells = calcInfoFromFeatures(image_new, state_kkH); // simpler method
-  // std::map<int, Eigen::MatrixXd> Fs;
-  // std::map<int, Eigen::MatrixXd> Ps;
-  // auto Delta_ells = calcInfoFromFeatures_Full(image_new, state_kkH, Fs, Ps); // the original method by kian
+  // auto Delta_ells = calcInfoFromFeatures(image_new, state_kkH); // simpler method
+  std::map<int, Eigen::MatrixXd> Fs;
+  std::map<int, Eigen::MatrixXd> Ps;
+  auto Delta_ells = calcInfoFromFeatures_Full(image_new, state_kkH, Fs, Ps); // the original method by kian
 
 
   // Calculate the information content of each of the currently used features
@@ -204,14 +204,14 @@ FeatureSelector::select(image_t& image,
       // selectedIds = select_traceofinv_randomized(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       
       // selectedIds = select_logdet_simple(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
-      // selectedIds = select_logdet_lazy(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+      selectedIds = select_logdet_lazy(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       // selectedIds = select_logdet_randomized(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       
       // selectedIds = select_lambdamin_simple(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       // selectedIds = select_lambdamin_lazy(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       // selectedIds = select_lambdamin_randomized(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       
-      selectedIds = select_linearized(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
+      // selectedIds = select_linearized(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       
       // selectedIds = select_quality(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
       
@@ -221,7 +221,7 @@ FeatureSelector::select(image_t& image,
 
 
       // time and metric analysis (comment in full experiments)
-      // time_and_metric_analysis(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells, Fs, Ps);
+      time_and_metric_analysis(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells, Fs, Ps);
       // linearized_bound_analysis(subset, image_new, kappa, Omega_kkH, Delta_ells, Delta_used_ells);
     }
     // send out selection time
