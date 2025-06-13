@@ -1,71 +1,34 @@
-Anticipated VINS-Mono
-=====================
+Visual Attention in VIO
+--
 
-During aggressive maneuvers, vision-based perception techniques tend to fail because of the lack of tracked features. The purpose of this work is to mitigate loss of feature tracks by being more clever with which features are selected for use in the optimization. By doing so, we add robustness to the visual-inertial motion estimation because features that are likely to be soon lost based on future motion are not selected. Further, we allow for more efficient optimization by using fewer features with high information content.
+This project presents the implementation of a task-oriented computational framework to enhance Visual-Inertial Navigation (VIN) in robots, addressing challenges such as limited time and energy resources. The framework strategically selects visual features using a Mean Square Error (MSE)-based, non-submodular objective function and a simplified dynamic anticipation model. To address the NP‐hardness of this problem, we implemented four polynomial‐time approximation algorithms: a classic greedy method with constant‐factor guarantees; a low‐rank greedy variant that significantly reduces computational complexity; a randomized greedy sampler that balances efficiency and solution quality; and a linearization‐based selector based on a first‐order Taylor expansion for near‐constant‐time execution.
 
-## Related Papers
-- L. Carlone and S. Karaman, **Attention and Anticipation in Fast Visual-Inertial Navigation**, 2017 IEEE International Conference on Robotics and Automation (ICRA), Singapore, 2017, pp. 3886-3893. [pdf](https://arxiv.org/abs/1610.03344)
-- T. Qin, P. Li and S. Shen, **[VINS-Mono](https://github.com/HKUST-Aerial-Robotics/VINS-Mono): A Robust and Versatile Monocular Visual-Inertial State Estimator**, in IEEE Transactions on Robotics, vol. 34, no. 4, pp. 1004-1020, Aug. 2018. [pdf](https://ieeexplore.ieee.org/document/8421746/?arnumber=8421746&source=authoralert)
 
-## Getting Started
 
-To see Anticipated VINS-Mono in action, make sure to download some of the EuRoC datasets.
 
-After cloning this repo (on the `anticipation` branch) into your catkin workspace and building, run the following commands (change the sequence/bag name appropriately) in three separate terminals:
+
+## Installation
+
+This implementation is based on the [VINS-Mono](https://github.com/HKUST-Aerial-Robotics/VINS-Mono) project. Please refer to this project to install the requirements first. Then clone or download this project and execute the following commands
 
 ```bash
-# remember to source!
-$ roslaunch vins_estimator euroc.launch sequence_name:=MH_05_difficult
+# build the workspace
+$ catkin build
 ```
 
 ```bash
-# be sure to cd into the appropriate directory
-rosbag play MH_05_difficult.bag --clock --pause
+# run the VIO pipeline
+$ roslaunch vins_estimator euroc.launch sequence_name:=stereo_vio_exp_ccw_020_future_horizon_gt
 ```
 
 ```bash
-# remember to source!
+# play the cancer-ribbon experiment bag file
+rosbag play /path/to/bag/file.bag --clock
+```
+
+```bash
+# execute launch file for rviz vizualization
 $ roslaunch vins_estimator vins_rviz.launch
 ```
 
-## Architecture
 
-Anticipated VINS-Mono builds off of the publicly available [VINS-Mono](https://github.com/HKUST-Aerial-Robotics/VINS-Mono) ROS implementation. We have added anticipation and attention components as illustrated in the block diagram below. Only the Ceres Solver-based `VIO Backend` block is from VINS-Mono.
-
-<p align="center">
-<img src="support_files/arch.png" width="79%" />
-</p>
-
-## Changes in VINS-Mono
-
-The following are new files, implemented as part of the anticipation algorithm.
-
-| File/Component     | Description                                                |
-|--------------------|------------------------------------------------------------|
-|[feature_tracker][1]| This is our own re-implementation of the VINS-Mono front end using the same processing ideas. Processing time is equivalent, if not 1-2 ms faster. The `feature_img` (`PointCloud`) message has been altered to return feature scores from `cv::goodFeaturesToTrack`. |
-|[state_defs.h][2]| Useful `typedef`s for horizon, state, features, and information matrices. |
-|[feature_selector.cpp][4]| Implements the expected information calculation (anticipation) and the feature selection algorithm (attention). This is where most of the work is done. |
-|[feature_selector.h][3]| Associated header file. |
-|[horizon_generator.cpp][6]| Implements the *State Horizon Generator* block. Two methods are implemented for predicting the future horizon: `IMU`, which propagates forward using the latest IMU measurement; and `GT`, which composes the current state estimate with relative ground truth transformations over the horizon. This method is meant to emulate having desired future poses from a path planner or from MPC. |
-|[horizon_generator.h][5]| Associated header file. |
-
-[1]: https://github.com/plusk01/Anticipated-VINS-Mono/tree/anticipation/feature_tracker
-[2]: https://github.com/plusk01/Anticipated-VINS-Mono/blob/anticipation/vins_estimator/src/utility/state_defs.h
-[3]: https://github.com/plusk01/Anticipated-VINS-Mono/blob/anticipation/vins_estimator/src/feature_selector.h
-[4]: https://github.com/plusk01/Anticipated-VINS-Mono/blob/anticipation/vins_estimator/src/feature_selector.cpp
-[5]: https://github.com/plusk01/Anticipated-VINS-Mono/blob/anticipation/vins_estimator/src/utility/horizon_generator.h
-[6]: https://github.com/plusk01/Anticipated-VINS-Mono/blob/anticipation/vins_estimator/src/utility/horizon_generator.cpp
-
-## More Information
-
-- Presentation: [Google Slides](https://docs.google.com/presentation/d/1oAt2vVqOZW8N5FfBAA4J-wxXY9Zx1KC5-ij9O4tS1UA/edit?usp=sharing)
-- Report: [PDF](https://github.com/plusk01/Anticipated-VINS-Mono/tree/anticipation/support_files/report/main.pdf)
-
-## Authors
-
-- [Parker Lusk](https://github.com/plusk01)
-- [Soumya Sudhakar](https://github.com/soumya-ss)
-
-## Licence
-
-[VINS-Mono](https://github.com/HKUST-Aerial-Robotics/VINS-Mono) is released under [GPLv3](http://www.gnu.org/licenses/).
