@@ -13,7 +13,7 @@ https://github.com/user-attachments/assets/ec2f0679-9618-47d6-b84b-63d9494077a1
 
 ## Installation
 
-This implementation is based on the [VINS-Mono](https://github.com/HKUST-Aerial-Robotics/VINS-Mono) project. Please refer to this project to install the requirements first. Then clone or download this project and execute the following commands
+This implementation is based on the [VINS-Mono](https://github.com/HKUST-Aerial-Robotics/VINS-Mono) and [Anticipated-VINS-Mono](https://github.com/plusk01/Anticipated-VINS-Mono) projects. Please refer to `VINS-Mono` project to install the requirements first. Then clone or download this project and execute the following commands.
 
 ```bash
 # build the workspace
