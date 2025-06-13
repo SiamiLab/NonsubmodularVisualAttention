@@ -9,7 +9,7 @@ https://github.com/user-attachments/assets/ec2f0679-9618-47d6-b84b-63d9494077a1
 
 
 ## Dataset
-The dataset from the cancer-ribbon experiment used in this work is available in EuRoC format, provided as both an ASL dataset and a ROS bag. You can access it from [this link](https://northeastern-my.sharepoint.com/:f:/g/personal/behzad_k_northeastern_edu/Eh4IJCtMy25Gulpw5cgLD8YBT8u4B7enzvno0VMq5WsseQ?e=K3e0Fw).
+The dataset from the cancer-ribbon experiment used in this work is available in EuRoC format, provided as both an ASL dataset and a ROS bag. You can access it from [this link](https://northeastern-my.sharepoint.com/:f:/g/personal/behzad_k_northeastern_edu/Eh4IJCtMy25Gulpw5cgLD8YBT8u4B7enzvno0VMq5WsseQ?e=K3e0Fw). (The link will be made publicly available upon acceptance.)
 
 
 
