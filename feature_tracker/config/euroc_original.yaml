@@ -3,18 +3,18 @@
 # camera calibration 
 model_type: PINHOLE
 camera_name: camera
-image_width: 1280
-image_height: 720
+image_width: 752
+image_height: 480
 distortion_parameters:
-   k1: -0.0407003
-   k2: 0.00997319
-   p1: -0.000548556
-   p2: -0.000113034
+   k1: -2.917e-01
+   k2: 8.228e-02
+   p1: 5.333e-05
+   p2: -1.578e-04
 projection_parameters:
-   fx: 528.925
-   fy: 528.595
-   cx: 632.465
-   cy: 358.6545
+   fx: 4.616e+02
+   fy: 4.603e+02
+   cx: 3.630e+02
+   cy: 2.481e+02
 
 # Feature Tracker Parameters
 stride: 2               # only process every `stride`th frame
