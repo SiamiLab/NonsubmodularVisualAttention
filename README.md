@@ -6,6 +6,10 @@ This project presents the implementation of a task-oriented computational framew
 
 
 
+https://github.com/user-attachments/assets/ec2f0679-9618-47d6-b84b-63d9494077a1
+
+
+
 
 ## Installation
 
