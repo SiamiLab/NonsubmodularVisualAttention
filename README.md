@@ -37,7 +37,7 @@ To tackle the NP-hard nature of this selection problem, we propose four polynomi
 ## Paper
 For detailed information on the methods and algorithms implemented in this work, please refer to our paper. If you find this work useful in your research, we kindly request that you cite our paper.
 
-- R. Vafaee, K. Behzad, M. Siami, L. Carlone, A. Jadbabaiem [**Non-submodular Visual Attention for Robot Navigation**](https://TODO.arxiv.link). IEEE Transactions on robotics, 2025. [arXiv:TODO](https://arxiv.org/abs/TODO).
+- R. Vafaee, K. Behzad, M. Siami, L. Carlone, A. Jadbabaiem, [**Non-submodular Visual Attention for Robot Navigation**](https://TODO.arxiv.link). IEEE Transactions on robotics, 2025. [arXiv:TODO](https://arxiv.org/abs/TODO).
  
   ```bibtex
   @InProceedings{Nonsubmodular_TRO,
