@@ -258,7 +258,7 @@ Implemented in `feature_selection_methods.hpp`:
 3. **Randomized Greedy Sampler** – implemented i the `select_traceofinv_randomized` function.
 4. **Linearization-Based Selector** – implemented i the `select_linearized` function.
 
-To switch between algorithms, edit [feature_selector.cpp](cins_estimator/src/feature_selector.cpp) and change the function used for feature selection.
+To switch between algorithms, edit [feature_selector.cpp](vins_estimator/src/feature_selector.cpp) and change the function used for feature selection.
 
 
 ## GPLv3 License
