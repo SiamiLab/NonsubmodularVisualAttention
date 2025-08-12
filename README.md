@@ -17,12 +17,6 @@
 **Authors:** [Kian Behzad](https://www.linkedin.com/in/kianbehzad/), [Reza Vafaee](https://www.linkedin.com/in/rezavafaee/), [Milad Siami](https://coe.northeastern.edu/people/siami-milad/), [Luca Carlone](https://lucacarlone.mit.edu/), [Ali Jadbabaie](https://jadbabaie.mit.edu/)
 
 
-<!-- This work build upon the [VINS-Mono](https://github.com/HKUST-Aerial-Robotics/VINS-Mono) and the [Anticipated Vins-Mono](https://github.com/plusk01/Anticipated-VINS-Mono) Projects and presents a task-oriented computational framework to enhance Visual-Inertial Navigation (VIN) in robots, addressing challenges such as limited time and energy resources. The framework strategically selects visual features using a Mean Square Error (MSE)-based, non-submodular objective function and a simplified dynamic anticipation model. To address the NP‐hardness of this problem, we introduce four polynomial‐time approximation algorithms:
-1) a classic greedy method;
-2) a low‐rank variant of the classic greedy;
-3) a randomized greedy sampler;
-4) and a linearization‐based selector. -->
-
 This work builds upon the [VINS-Mono](https://github.com/HKUST-Aerial-Robotics/VINS-Mono) and [Anticipated VINS-Mono](https://github.com/plusk01/Anticipated-VINS-Mono) projects, introducing a task-oriented computational framework to enhance Visual-Inertial Navigation (VIN) for robots. It addresses key challenges such as limited time and energy resources by strategically selecting visual features based on a *Mean Square Error (MSE)-driven, non-submodular objective function* combined with a simplified dynamic anticipation model.
 
 To tackle the NP-hard nature of this selection problem, we propose four polynomial-time approximation algorithms:
@@ -36,7 +30,7 @@ To tackle the NP-hard nature of this selection problem, we propose four polynomi
 
 <br>
 <div align="center">
-    <img align="center" src="docs/media/diagram.jpeg" width="500" alt="diagram">
+    <img align="center" src="docs/media/diagram.jpeg" width="700" alt="diagram">
 </div>
 <br>
 
