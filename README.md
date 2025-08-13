@@ -62,7 +62,7 @@ This framework is compatible with any EuRoC-formatted dataset played as a ROS ba
 
 The Cancer-Ribbon dataset is provided in EuRoC format, available as both an **ASL dataset** and a **ROS bag**. It can be accessed from [this link](https://northeastern-my.sharepoint.com/:f:/g/personal/behzad_k_northeastern_edu/Eh4IJCtMy25Gulpw5cgLD8YBT8u4B7enzvno0VMq5WsseQ?e=K3e0Fw) *(link will be made publicly available upon paper acceptance)*.  
 
-For the Cancer-Ribbon Experiment, we used a ground vehicle equipped with a stereo camera.
+This dataset captures a [Quanser QCar](https://www.quanser.com/products/qcar/) ground vehicle equipped with a ZED2 stereo camera performing a cancer ribbon–shaped trajectory in 2D within a 6 × 6 m area. Ground truth is recorded using 8 Motive motion capture cameras mounted overhead.
 
 
 <br>
