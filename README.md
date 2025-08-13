@@ -65,10 +65,10 @@ The Cancer-Ribbon dataset is provided in EuRoC format, available as both an **AS
 For the Cancer-Ribbon Experiment, we used a ground vehicle equipped with a stereo camera.
 
 
+<br>
 <div align="center">
     <img align="center" src="docs/media/sensor_configuration.jpeg" width="700" alt="sensor_configuration">
 </div>
-<br>
 
 
 
