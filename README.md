@@ -254,10 +254,10 @@ Located at [vins_estimator/src/utility/state_defs.h](vins_estimator/src/utility/
 ### Selection Algorithms
 Implemented in `feature_selection_methods.hpp`:
 
-1. **Classic Greedy Method** – implemented i the `select_traceofinv_simple` function.
-2. **Low-Rank Greedy Variant** – implemented i the `select_low_rank_update` function.
-3. **Randomized Greedy Sampler** – implemented i the `select_traceofinv_randomized` function.
-4. **Linearization-Based Selector** – implemented i the `select_linearized` function.
+1. **Classic Greedy Method** – implemented in the `select_traceofinv_simple` function.
+2. **Low-Rank Greedy Variant** – implemented in the `select_low_rank_update` function.
+3. **Randomized Greedy Sampler** – implemented in the `select_traceofinv_randomized` function.
+4. **Linearization-Based Selector** – implemented in the `select_linearized` function.
 
 To switch between algorithms, edit [feature_selector.cpp](vins_estimator/src/feature_selector.cpp) and change the function used for feature selection.
 
