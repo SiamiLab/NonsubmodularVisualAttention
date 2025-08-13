@@ -14,7 +14,7 @@
 
 # Non-submodular Visual Attention for Robot Navigation
 
-**Authors:** [Kian Behzad](https://www.linkedin.com/in/kianbehzad/), [Reza Vafaee](https://www.linkedin.com/in/rezavafaee/), [Milad Siami](https://coe.northeastern.edu/people/siami-milad/), [Luca Carlone](https://lucacarlone.mit.edu/), [Ali Jadbabaie](https://jadbabaie.mit.edu/)
+**Authors:** [Reza Vafaee](https://www.linkedin.com/in/rezavafaee/), [Kian Behzad](https://www.linkedin.com/in/kianbehzad/), [Milad Siami](https://coe.northeastern.edu/people/siami-milad/), [Luca Carlone](https://lucacarlone.mit.edu/), [Ali Jadbabaie](https://jadbabaie.mit.edu/)
 
 
 This work builds upon the [VINS-Mono](https://github.com/HKUST-Aerial-Robotics/VINS-Mono) and [Anticipated VINS-Mono](https://github.com/plusk01/Anticipated-VINS-Mono) projects, introducing a task-oriented computational framework to enhance Visual-Inertial Navigation (VIN) for robots. It addresses key challenges such as limited time and energy resources by strategically selecting visual features based on a *Mean Square Error (MSE)-driven, non-submodular objective function* combined with a simplified dynamic anticipation model.
@@ -40,12 +40,11 @@ For detailed information on the methods and algorithms implemented in this work,
 - R. Vafaee, K. Behzad, M. Siami, L. Carlone, A. Jadbabaie, [**Non-submodular Visual Attention for Robot Navigation**](https://TODO.arxiv.link). IEEE Transactions on robotics, 2025. [arXiv:TODO](https://arxiv.org/abs/TODO).
  
   ```bibtex
-  @InProceedings{Nonsubmodular_TRO,
+  @article{Nonsubmodular_TRO,
     title = {Non-submodular Visual Attention for Robot Navigation},
     author = {Vafaee, Reza and Behzad, Kian and Siami, Milad and Carlone, Luca and Jadbabaie, Ali},
     year = {2025},
-    booktitle = {IEEE Transactions on robotics},
-    url = {TODO},
+    journal = {IEEE Transactions on robotics},
     pdf = {TODO}
   }
   ```
@@ -67,7 +66,7 @@ For the Cancer-Ribbon Experiment, we used a ground vehicle equipped with a stere
 
 
 <div align="center">
-    <img align="center" src="docs/media/sensor_placement.jpeg" width="400" alt="sensor_placement">
+    <img align="center" src="docs/media/sensor_configuration.jpeg" width="700" alt="sensor_configuration">
 </div>
 <br>
 
