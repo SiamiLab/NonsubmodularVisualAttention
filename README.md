@@ -64,6 +64,8 @@ The Cancer-Ribbon dataset is provided in EuRoC format, available as both an **AS
 
 This dataset captures a [Quanser QCar](https://www.quanser.com/products/qcar/) ground vehicle equipped with a ZED2 stereo camera performing a cancer ribbon–shaped trajectory in 2D within a 6 × 6 m area. Ground truth is recorded using 8 Motive motion capture cameras mounted overhead.
 
+For detailed information about the dataset, its files, and their structure, see the [dataset README](docs/dataset%20info/README.md).
+
 
 <br>
 <div align="center">
