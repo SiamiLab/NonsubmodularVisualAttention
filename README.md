@@ -93,6 +93,8 @@ To avoid repeating this step, add the appropriate line to the end of your `~/.ba
 
 Next, install **VINS-Mono** following its [README instructions](https://github.com/HKUST-Aerial-Robotics/VINS-Mono/blob/master/README.md). Ensure that VINS-Mono is running correctly before proceeding.
 
+> **Note:** Even if you choose local installation, it’s worth reviewing the [Dockerfile](docker/Dockerfile). It can help you install all prerequisites correctly by showing the commands used in the Docker setup.
+
 Create a new workspace and clone this repository:
 
 ```bash
