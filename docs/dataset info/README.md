@@ -12,7 +12,7 @@ To use the dataset, simply load the desired format into your SLAM or Visual-Iner
 
 
 ## File Downloads
-You can download the dataset from [this link](https://northeastern-my.sharepoint.com/:f:/g/personal/behzad_k_northeastern_edu/Eh4IJCtMy25Gulpw5cgLD8YBT8u4B7enzvno0VMq5WsseQ?e=K3e0Fw) *(link will be made publicly available upon paper acceptance)*.
+You can download the dataset from [IEEE DataPort](https://dx.doi.org/10.21227/n36c-xz38) *(link will be made publicly available upon paper acceptance)*.
 - `cancer_ribbon_ASL.zip` – Dataset in ASL folder format.  
 - `cancer_ribbon_bag.zip` – Dataset in ROS bag format.
 

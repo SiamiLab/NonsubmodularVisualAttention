@@ -34,10 +34,10 @@ To tackle the NP-hard nature of this selection problem, we propose four polynomi
 </div>
 <br>
 
-## Paper
-For detailed information on the methods and algorithms implemented in this work, please refer to our paper. If you find this work useful in your research, we kindly request that you cite our paper.
+## Related Papers and Dataset
+For detailed information on the methods and algorithms implemented in this work, please refer to our paper. If you use this work or the accompanying dataset in your research, kindly cite the relevant reference(s) below.
 
-- R. Vafaee, K. Behzad, M. Siami, L. Carlone, A. Jadbabaie, [**Non-submodular Visual Attention for Robot Navigation**](https://TODO.arxiv.link). IEEE Transactions on robotics, 2025. [arXiv:TODO](https://arxiv.org/abs/TODO).
+- R. Vafaee, K. Behzad, M. Siami, L. Carlone, A. Jadbabaie, **"Non-submodular Visual Attention for Robot Navigation"**. IEEE Transactions on robotics, 2025. [arXiv:TODO](https://arxiv.org/abs/TODO).
  
   ```bibtex
   @article{Nonsubmodular_TRO,
@@ -48,7 +48,18 @@ For detailed information on the methods and algorithms implemented in this work,
     pdf = {TODO}
   }
   ```
+- K. Behzad, R. Vafaee, M. Siami, L. Carlone, A. Jadbabaie, **"Visual Inertial Navigation: Cancer-Ribbon Dataset"**, IEEE Dataport, 2025, doi: [10.21227/n36c-xz38](https://dx.doi.org/10.21227/n36c-xz38).
 
+  ```bibtex
+  @data{n36c-xz38-25,
+    doi = {10.21227/n36c-xz38},
+    url = {https://dx.doi.org/10.21227/n36c-xz38},
+    author = {Kian Behzad and Reza Vafaee and Milad Siami and Luca Carlone and Ali Jadbabaie},
+    publisher = {IEEE Dataport},
+    title = {Visual Inertial Navigation: Cancer-Ribbon Dataset},
+    year = {2025}
+  }
+  ```
 
 ## Demo
 
@@ -60,7 +71,7 @@ https://github.com/user-attachments/assets/ec2f0679-9618-47d6-b84b-63d9494077a1
 
 This framework is compatible with any EuRoC-formatted dataset played as a ROS bag. In our experiments, we used both the official EuRoC MAV datasets and a custom Cancer-Ribbon Experiment to evaluate our method.  
 
-The Cancer-Ribbon dataset is provided in EuRoC format, available as both an **ASL dataset** and a **ROS bag**. It can be accessed from [this link](https://northeastern-my.sharepoint.com/:f:/g/personal/behzad_k_northeastern_edu/Eh4IJCtMy25Gulpw5cgLD8YBT8u4B7enzvno0VMq5WsseQ?e=K3e0Fw) *(link will be made publicly available upon paper acceptance)*.  
+The Cancer-Ribbon dataset is provided in EuRoC format, available as both an **ASL dataset** and a **ROS bag**. It can be accessed from [IEEE DataPort](https://dx.doi.org/10.21227/n36c-xz38) *(link will be made publicly available upon paper acceptance)*.  
 
 This dataset captures a [Quanser QCar](https://www.quanser.com/products/qcar/) ground vehicle equipped with a ZED2 stereo camera performing a cancer ribbon–shaped trajectory in 2D within a 6 × 6 m area. Ground truth is recorded using 8 Motive motion capture cameras mounted overhead.
 
@@ -177,7 +188,7 @@ $ sudo bash /PATH/TO/docker_resume.bash
 ### Download a ROS Bag Dataset
 Download and extract any **EuRoC-formatted** dataset. You can use either:  
 - [Official EuRoC MAV datasets](https://drive.google.com/open?id=1_kwqHojvBusHxilcclqXh6haxelhJW0O)  
-- [Custom Cancer-Ribbon Experiment dataset](https://northeastern-my.sharepoint.com/:f:/g/personal/behzad_k_northeastern_edu/Eh4IJCtMy25Gulpw5cgLD8YBT8u4B7enzvno0VMq5WsseQ?e=K3e0Fw)  
+- [Custom Cancer-Ribbon Experiment dataset](https://dx.doi.org/10.21227/n36c-xz38)  
 
 > **Note for Docker users:** If using Docker, you can place the bag files directly into the mounted host directory and access them inside the container.
 
