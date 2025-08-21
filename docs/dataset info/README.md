@@ -10,11 +10,18 @@ Both follow the well-known **EuRoC MAV dataset format**, allowing you to use the
 
 To use the dataset, simply load the desired format into your SLAM or Visual-Inertial Navigation framework as you would with standard EuRoC data.
 
+In addition, the dataset also includes calibration data:
+
+- **Camera calibration**: Checkerboard images (left/right lenses) for estimating the intrinsic parameters of the onboard cameras.
+- **IMU calibration**: Stationary IMU measurements (~284 seconds) for estimating noise parameters.
+
 
 ## File Downloads
 You can download the dataset from [IEEE DataPort](https://dx.doi.org/10.21227/n36c-xz38) *(link will be made publicly available upon paper acceptance)*.
 - `cancer_ribbon_ASL.zip` – Dataset in ASL folder format.  
 - `cancer_ribbon_bag.zip` – Dataset in ROS bag format.
+- `camera_calibration_images.zip` – Camera calibration images.  
+- `imu_calibarion_data.zip` – IMU sensor calibration data.
 
 
 ## ASL Format
@@ -132,3 +139,30 @@ Vector3 components:
     - `y`: Velocity in the y-direction (m/s)  
     - `z`: Unused  
 
+
+## Camera Calibration Images
+
+Although the ASL format already includes our calibrated parameters, these images are provided in case you wish to perform your own calibration. This file contains checkerboard images captured with the stereo camera on the robot. The images are intended for camera calibration and estimation of the intrinsic parameters of the stereo pair.
+
+File format:
+  - time_left.jpg  $\rightarrow$  image from the left camera
+  - time_right.jpg $\rightarrow$  image from the right camera
+
+Checkerboard properties:
+  - Board size: 10 x 7 squares
+  - Inner corners: 9 x 6
+  - Square size: 0.039 m (width) × 0.037 m (height)
+
+
+## IMU Sensor Calibration Data
+
+Although the ASL format already includes our calibrated parameters, this data is provided in case you wish to perform your own calibration. This file contains IMU measurements recorded while the robot was stationary (~284 seconds). The dataset can be used to estimate noise parameters of the onboard IMU sensor (e.g., bias instability, random walk, and measurement noise characteristics).
+
+The CSV file includes timestamped IMU measurements. columns are:
+  - timestamp [ns]
+  - angular_velocity_x [rad/s]
+  - angular_velocity_y [rad/s]
+  - angular_velocity_z [rad/s]
+  - linear_acceleration_x [m/s^2]
+  - linear_acceleration_y [m/s^2]
+  - linear_acceleration_z [m/s^2]
