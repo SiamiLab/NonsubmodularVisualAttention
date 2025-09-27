@@ -63,7 +63,8 @@ For detailed information on the methods and algorithms implemented in this work,
 
 ## Demo
 
-https://github.com/user-attachments/assets/2bd37845-95d4-4667-b4f2-d0889ee15c3c
+https://github.com/user-attachments/assets/24824066-578c-4ccd-8916-f38e7ff78d26
+
 
 
 
