@@ -37,15 +37,15 @@ To tackle the NP-hard nature of this selection problem, we propose four polynomi
 ## Related Papers and Dataset
 For detailed information on the methods and algorithms implemented in this work, please refer to our paper. If you use this work or the accompanying dataset in your research, kindly cite the relevant reference(s) below.
 
-- R. Vafaee, K. Behzad, M. Siami, L. Carlone, A. Jadbabaie, **"Non-submodular Visual Attention for Robot Navigation"**. IEEE Transactions on robotics, 2025. [arXiv:TODO](https://arxiv.org/abs/TODO).
+- R. Vafaee, K. Behzad, M. Siami, L. Carlone, A. Jadbabaie, **"Non-submodular Visual Attention for Robot Navigation"**. IEEE Transactions on Robotics, 2025. [arXiv](https://arxiv.org/abs/2510.00942).
  
   ```bibtex
   @article{Nonsubmodular_TRO,
     title = {Non-submodular Visual Attention for Robot Navigation},
     author = {Vafaee, Reza and Behzad, Kian and Siami, Milad and Carlone, Luca and Jadbabaie, Ali},
     year = {2025},
-    journal = {IEEE Transactions on robotics},
-    pdf = {TODO}
+    journal = {IEEE Transactions on Robotics},
+    pdf = {https://arxiv.org/abs/2510.00942}
   }
   ```
 - K. Behzad, R. Vafaee, M. Siami, L. Carlone, A. Jadbabaie, **"Visual Inertial Navigation: Cancer-Ribbon Dataset"**, IEEE Dataport, 2025, doi: [10.21227/n36c-xz38](https://dx.doi.org/10.21227/n36c-xz38).
